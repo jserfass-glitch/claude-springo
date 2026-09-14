@@ -1,0 +1,1226 @@
+<title>Springo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#FBF7F0; --surface:#FFFFFF; --surface-2:#F4EFE5;
+  --ink:#2B2722; --ink-muted:#6E6257; --hairline:#E8E0D4;
+  --bezel:#221E1A; --bezel-edge:#3A332B;
+  --shadow:0 2px 14px rgba(43,39,34,.08);
+  --shadow-lift:0 10px 40px rgba(43,39,34,.14);
+  --rail-bg:#F4EFE5;
+  --acc:#F0B040; --acc-ink:#2B2722; --acc-deep:#8A5A00; --acc-soft:#FFC96B;
+}
+:root:not([data-theme="light"]){ }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#141210; --surface:#241F1B; --surface-2:#1E1A16;
+    --ink:#FBF7F0; --ink-muted:#A69A8C; --hairline:#3A322A;
+    --bezel:#0B0A09; --bezel-edge:#2A241E;
+    --shadow:0 2px 14px rgba(0,0,0,.5);
+    --shadow-lift:0 10px 40px rgba(0,0,0,.6);
+    --rail-bg:#1E1A16;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#141210; --surface:#241F1B; --surface-2:#1E1A16;
+  --ink:#FBF7F0; --ink-muted:#A69A8C; --hairline:#3A322A;
+  --bezel:#0B0A09; --bezel-edge:#2A241E;
+  --shadow:0 2px 14px rgba(0,0,0,.5);
+  --shadow-lift:0 10px 40px rgba(0,0,0,.6);
+  --rail-bg:#1E1A16;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:Nunito,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:34px 56px}
+
+/* ---------------------------------------------------------- masthead */
+.masthead{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 28px;margin-bottom:30px}
+.wordmark{font-size:38px;font-weight:800;letter-spacing:-1.1px;line-height:1;margin:0}
+.wordmark span{color:var(--acc-deep)}
+.tagline{margin:0;max-width:46ch;color:var(--ink-muted);font-size:15px;line-height:1.55}
+.stamp{
+  margin-left:auto;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--ink-muted);
+  border:1px solid var(--hairline);border-radius:999px;padding:7px 14px;white-space:nowrap;
+}
+
+/* ---------------------------------------------------------- bench */
+.bench{display:grid;grid-template-columns:minmax(0,390px) minmax(0,1fr);gap:40px;align-items:start}
+.bench > *{min-width:0}
+@media (max-width:880px){ .bench{grid-template-columns:minmax(0,1fr);gap:28px} }
+
+/* ---------------------------------------------------------- phone */
+.phone{
+  background:var(--bezel);border:1px solid var(--bezel-edge);border-radius:46px;
+  padding:11px;box-shadow:var(--shadow-lift);position:relative;min-width:0;
+}
+.screen{
+  background:var(--ground);border-radius:36px;overflow:hidden;position:relative;
+  height:664px;display:flex;flex-direction:column;min-width:0;
+}
+.notch{
+  position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:84px;height:22px;background:var(--bezel);border-radius:999px;z-index:40;
+}
+.statusbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 18px 3px;font-size:11px;font-weight:700;color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.statusbar .sig{letter-spacing:.6px;color:var(--ink-muted);font-size:10px}
+
+/* app header */
+.apphead{padding:6px 16px 0;min-width:0}
+.apptitle{display:flex;align-items:center;justify-content:space-between}
+.apptitle h2{margin:0;font-size:19px;font-weight:800;letter-spacing:-.4px}
+.iconbtn{
+  border:0;background:transparent;color:var(--ink-muted);font-size:17px;cursor:pointer;
+  width:32px;height:32px;border-radius:999px;
+}
+.iconbtn:hover{background:var(--surface-2)}
+
+/* chip strip */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:11px 0 12px;scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(90deg,#000 90%,transparent);
+  mask-image:linear-gradient(90deg,#000 90%,transparent);min-width:0}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;display:flex;align-items:center;gap:7px;cursor:pointer;
+  border:1.5px solid var(--hairline);background:var(--surface);color:var(--ink);
+  border-radius:999px;padding:7px 13px 7px 10px;font:600 12.5px Nunito,sans-serif;
+  transition:border-color .18s, background .18s;white-space:nowrap;
+}
+.chip .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.chip .badge{
+  min-width:17px;height:17px;padding:0 5px;border-radius:999px;
+  background:var(--ink);color:var(--ground);font:700 10.5px "IBM Plex Mono",monospace;
+  display:grid;place-items:center;
+}
+.chip[aria-selected="true"]{border-color:currentColor;background:var(--surface)}
+
+/* score row */
+.scorerow{display:flex;gap:8px;padding:0 16px 11px;min-width:0}
+.player{
+  flex:1;display:flex;align-items:center;gap:9px;cursor:pointer;text-align:left;
+  border:1.5px solid var(--hairline);background:var(--surface);color:var(--ink);
+  border-radius:16px;padding:9px 11px;font-family:Nunito,sans-serif;min-width:0;
+  transition:border-color .18s, transform .18s;
+}
+.player:hover{transform:translateY(-1px)}
+.player[aria-pressed="true"]{border-color:currentColor}
+.player .av{
+  width:29px;height:29px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  font:800 12px Nunito,sans-serif;
+}
+.player .nm{font-size:12.5px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+.player .ct{font-size:11px;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+
+/* board */
+.boardwrap{padding:0 16px;position:relative;flex:0 0 auto;min-width:0}
+.viewing{
+  display:none;align-items:center;gap:7px;margin:0 0 9px;
+  font:600 11.5px "IBM Plex Mono",monospace;letter-spacing:.04em;
+  padding:6px 11px;border-radius:999px;width:fit-content;
+}
+.boardwrap.theirs .viewing{display:flex}
+.board{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;
+  border-radius:24px;transition:transform .5s cubic-bezier(.32,.72,0,1);
+  transform-origin:50% 60%;
+}
+.boardwrap.theirs{background:color-mix(in srgb, var(--acc) 9%, transparent);
+  border-radius:26px;padding:12px 16px 14px;margin:0 4px}
+.cell{
+  position:relative;overflow:hidden;aspect-ratio:1;border-radius:18px;cursor:pointer;
+  border:1.5px solid color-mix(in srgb, var(--acc) 30%, var(--hairline));
+  background:var(--surface);color:var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;padding:4px 3px;font-family:Nunito,sans-serif;min-width:0;
+  transition:border-color .25s, color .25s;
+}
+.cell .ico{font-size:13px;line-height:1;position:relative;z-index:2}
+.cell .lbl{
+  font-size:8.6px;font-weight:700;line-height:1.16;text-align:center;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  position:relative;z-index:2;letter-spacing:-.1px;overflow-wrap:anywhere;hyphens:auto;
+}
+.cell.free{border-style:dashed;border-color:color-mix(in srgb, var(--acc) 55%, transparent)}
+.cell.free .ico{font-size:16px;color:var(--acc-deep)}
+.cell.marked{border-color:transparent;background:var(--acc);color:var(--acc-ink)}
+.cell.photo.marked{color:#fff}
+.cell.photo.marked .lbl{text-shadow:0 1px 3px rgba(0,0,0,.65)}
+.cell .bloom{
+  position:absolute;width:210px;height:210px;border-radius:50%;background:var(--acc);
+  transform:translate(-50%,-50%) scale(0);pointer-events:none;z-index:1;
+}
+.cell .ph{position:absolute;inset:0;z-index:1;opacity:0;transition:opacity .3s;
+  background-size:cover;background-position:center}
+.cell.photo.marked .ph{opacity:1}
+.cell .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.42))}
+.cell svg.tick{position:absolute;top:5px;right:5px;width:13px;height:13px;z-index:3;opacity:0;transition:opacity .1s}
+.cell.marked svg.tick{opacity:1}
+.cell svg.tick path{
+  fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:22;stroke-dashoffset:22;transition:stroke-dashoffset .26s ease-out .12s;
+}
+.cell.marked svg.tick path{stroke-dashoffset:0}
+.cell.oneaway{animation:breathe 2.4s ease-in-out infinite}
+.cell.oneaway::before{
+  content:"";position:absolute;inset:-1.5px;border-radius:18px;
+  border:1.5px solid var(--acc);opacity:.55;
+}
+@keyframes breathe{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.82;transform:scale(1.015)}}
+.cell.flash{animation:flash .34s ease-out}
+@keyframes flash{0%{transform:scale(1)}40%{transform:scale(1.08);filter:brightness(1.45)}100%{transform:scale(1)}}
+.board.tilt{transform:rotate(-2.6deg) translateY(-6px) scale(1.015)}
+
+#petals{position:absolute;inset:0;pointer-events:none;z-index:30}
+
+/* square detail + capture sheet */
+.scrim{
+  position:absolute;inset:0;z-index:44;background:rgba(20,17,14,.42);
+  opacity:0;pointer-events:none;transition:opacity .28s;
+}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:45;
+  background:var(--surface);border-radius:28px 28px 0 0;
+  border-top:1.5px solid var(--hairline);box-shadow:0 -8px 40px rgba(20,17,14,.22);
+  transform:translateY(101%);transition:transform .42s cubic-bezier(.32,.72,0,1);
+  max-height:92%;overflow-y:auto;overscroll-behavior:contain;padding:10px 16px 18px;
+}
+.sheet.up{transform:translateY(0)}
+.grab{width:38px;height:4px;border-radius:999px;background:var(--hairline);margin:0 auto 12px}
+.sheet h3{margin:0 0 2px;font-size:20px;font-weight:800;letter-spacing:-.4px}
+.sheet .sci{margin:0 0 10px;font:500 11px "IBM Plex Mono",monospace;color:var(--ink-muted);font-style:italic}
+.sheet .hint{margin:0 0 14px;font-size:13px;line-height:1.5;color:var(--ink-muted)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+.pane{display:flex;flex-direction:column;gap:5px;min-width:0}
+.pane .cap{font:600 9.5px "IBM Plex Mono",monospace;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--ink-muted)}
+.pane .frame{
+  aspect-ratio:1;border-radius:16px;overflow:hidden;background:var(--surface-2);
+  border:1.5px solid var(--hairline);display:grid;place-items:center;position:relative;
+}
+.pane .frame img{width:100%;height:100%;object-fit:cover;display:block}
+.pane .frame .empty{font-size:10.5px;color:var(--ink-muted);text-align:center;padding:0 8px;line-height:1.4}
+.credit{font:500 9px "IBM Plex Mono",monospace;color:var(--ink-muted);line-height:1.45}
+.sheet .row{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
+.sheet .row .btn{flex:1}
+.btn.danger{background:transparent;border:1.5px solid var(--hairline);color:var(--ink-muted);font-weight:600}
+
+/* live viewfinder */
+.finder{
+  position:relative;border-radius:20px;overflow:hidden;background:#111;
+  height:190px;margin-bottom:12px;display:none;
+}
+.finder.on{display:block}
+.finder video{width:100%;height:100%;object-fit:cover;display:block}
+.shutter{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  width:50px;height:50px;border-radius:50%;border:4px solid rgba(255,255,255,.92);
+  background:rgba(255,255,255,.28);cursor:pointer;
+}
+.shutter:active{transform:translateX(-50%) scale(.93)}
+.camnote{
+  font:500 10.5px "IBM Plex Mono",monospace;line-height:1.55;color:var(--ink-muted);
+  border:1px dashed var(--hairline);border-radius:14px;padding:9px 11px;margin-bottom:12px;
+}
+.pipe{
+  font:500 10px "IBM Plex Mono",monospace;line-height:1.6;color:var(--ink-muted);
+  background:var(--surface-2);border-radius:14px;padding:9px 11px;margin-bottom:12px;
+  white-space:pre-wrap;
+}
+#fileIn{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+/* win card */
+.wincard{
+  position:absolute;left:14px;right:14px;bottom:74px;z-index:35;
+  background:var(--surface);border:1.5px solid var(--hairline);border-radius:26px;
+  padding:18px 18px 16px;box-shadow:var(--shadow-lift);
+  transform:translateY(140%);transition:transform .5s cubic-bezier(.32,.72,0,1);
+}
+.wincard.up{transform:translateY(0)}
+.wincard h3{margin:0 0 3px;font-size:21px;font-weight:800;letter-spacing:-.5px}
+.wincard h3 em{font-style:normal;color:var(--acc-deep)}
+.wincard p{margin:0 0 13px;font-size:12.5px;color:var(--ink-muted);line-height:1.5}
+.wincard .row{display:flex;gap:8px}
+.btn{
+  flex:1;border:0;border-radius:999px;padding:11px 14px;cursor:pointer;
+  font:700 13px Nunito,sans-serif;background:var(--acc);color:var(--acc-ink);
+}
+.btn.ghost{background:transparent;border:1.5px solid var(--hairline);color:var(--ink)}
+
+/* footer strip + tabbar */
+.syncbar{
+  margin-top:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  padding:10px 16px;font:600 10px "IBM Plex Mono",monospace;color:var(--ink-muted);min-width:0;
+  letter-spacing:.03em;
+}
+.pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--hairline);
+  border-radius:999px;padding:4px 8px;white-space:nowrap}
+.pill.live{border-color:color-mix(in srgb, var(--acc) 50%, transparent);color:var(--acc-deep)}
+.tabbar{
+  display:flex;border-top:1px solid var(--hairline);background:var(--surface);
+  padding:8px 4px 16px;
+}
+.tab{
+  flex:1;border:0;background:transparent;cursor:pointer;padding:5px 0 3px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font:700 9.5px Nunito,sans-serif;color:var(--ink-muted);letter-spacing:.02em;
+}
+.tab .ti{font-size:17px;line-height:1}
+.tab[aria-selected="true"]{color:var(--acc-deep)}
+
+/* life list screen */
+.lifelist{display:none;flex-direction:column;padding:0 16px;overflow-y:auto;flex:1}
+.screen.list .boardwrap,.screen.list .scorerow,.screen.list .chips{display:none}
+.screen.list .lifelist{display:flex}
+.lifehead{display:flex;align-items:baseline;gap:10px;padding:10px 0 4px}
+.lifenum{font-size:38px;font-weight:800;letter-spacing:-1.6px;line-height:1;font-variant-numeric:tabular-nums}
+.lifehead span{font-size:12px;color:var(--ink-muted);font-weight:600}
+.lifegrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px 0 16px}
+.lifeitem{
+  border:1.5px solid var(--hairline);border-radius:16px;padding:8px 7px;background:var(--surface);
+  display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center;
+}
+.lifeitem .ico{font-size:16px}
+.lifeitem .nm{font-size:8.8px;font-weight:700;line-height:1.15;overflow-wrap:anywhere}
+.lifeitem .dt{font:500 8px "IBM Plex Mono",monospace;color:var(--ink-muted)}
+.lifeitem .n{font:700 8px "IBM Plex Mono",monospace;color:var(--acc-deep)}
+
+/* ---------------------------------------------------------- rail */
+.rail{display:flex;flex-direction:column;gap:16px;min-width:0}
+.railnote{font-size:14.5px;line-height:1.62;color:var(--ink-muted);max-width:62ch;margin:0}
+.railnote b{color:var(--ink);font-weight:700}
+.panel{
+  background:var(--rail-bg);border:1px solid var(--hairline);border-radius:20px;padding:16px 18px 17px;
+}
+.panel h3{
+  margin:0 0 12px;font:600 10.5px "IBM Plex Mono",monospace;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-muted);
+}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:13px}
+.kv dt{font:500 11.5px "IBM Plex Mono",monospace;color:var(--ink-muted);letter-spacing:.02em}
+.kv dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
+.kv dd.soft{font-weight:600;color:var(--ink-muted)}
+#lastMove{
+  font:500 12px "IBM Plex Mono",monospace;line-height:1.65;color:var(--ink);
+  margin:0;white-space:pre-wrap;
+}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px}
+.sw{
+  width:34px;height:34px;border-radius:11px;display:grid;place-items:center;
+  font:700 9px "IBM Plex Mono",monospace;border:1.5px solid transparent;cursor:default;
+}
+.sw.on{border-color:var(--ink)}
+.patterns{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:9px}
+.pat{display:flex;flex-direction:column;align-items:center;gap:5px}
+.pat .mini{display:grid;grid-template-columns:repeat(5,1fr);gap:1.5px;width:52px}
+.pat .mini i{aspect-ratio:1;border-radius:2px;background:var(--hairline)}
+.pat .mini i.on{background:var(--acc)}
+.pat span{font:500 9.5px "IBM Plex Mono",monospace;color:var(--ink-muted);letter-spacing:.03em}
+.panel table{width:100%;border-collapse:collapse;font-size:12.5px}
+.panel th{
+  text-align:left;font:600 10px "IBM Plex Mono",monospace;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-muted);padding:0 0 7px;font-weight:600;
+}
+.panel td{padding:5px 0;border-top:1px solid var(--hairline);font-variant-numeric:tabular-nums}
+.panel td:first-child{font-weight:600}
+.panel td:not(:first-child){text-align:right;color:var(--ink-muted)}
+.panel tr.hi td{color:var(--ink);font-weight:700}
+.foot{
+  margin-top:6px;font:500 11.5px "IBM Plex Mono",monospace;line-height:1.7;
+  color:var(--ink-muted);
+}
+.foot a{color:var(--acc-deep)}
+.ctrls{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.ctrl{
+  border:1.5px solid var(--hairline);background:var(--surface);color:var(--ink);
+  border-radius:999px;padding:8px 15px;cursor:pointer;
+  font:700 12px Nunito,sans-serif;transition:border-color .18s,transform .18s;
+}
+.ctrl:hover{transform:translateY(-1px);border-color:var(--ink-muted)}
+.ctrl[aria-pressed="true"]{background:var(--acc);color:var(--acc-ink);border-color:transparent}
+:focus-visible{outline:2.5px solid var(--acc-deep);outline-offset:2px;border-radius:6px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.12s !important}
+  .cell.oneaway{animation:none}
+  .cell.oneaway::before{opacity:.8}
+}
+@media (max-width:880px){
+  .page{padding-block:24px 40px}
+  .wordmark{font-size:31px}
+  .stamp{margin-left:0}
+  .phone{border-radius:38px;padding:8px}
+  .screen{border-radius:31px;height:648px}
+}
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <div>
+      <h1 class="wordmark">Spring<span>o</span></h1>
+      <p class="tagline">Real-world bingo. Pick a theme, everyone gets a board, mark a square when you
+      see the thing outside. This is the board screen, running. Tap a square to open it, and in photo mode the
+      camera is real.</p>
+    </div>
+    <div class="stamp">Interactive prototype &middot; v1 board screen</div>
+  </header>
+
+  <div class="bench">
+    <div>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="screen" id="screen">
+          <div class="statusbar"><span>9:41</span><span class="sig" id="sig">NO SERVICE &middot; 64%</span></div>
+
+          <div class="apphead">
+            <div class="apptitle">
+              <h2 id="gameName">Ozark Spring</h2>
+              <button class="iconbtn" type="button" aria-label="Game settings">&#9881;</button>
+            </div>
+            <div class="chips" id="chips" role="tablist" aria-label="Your games"></div>
+          </div>
+
+          <div class="scorerow" id="scorerow"></div>
+
+          <div class="boardwrap" id="boardwrap">
+            <div class="viewing" id="viewing"></div>
+            <div class="board" id="board" role="grid" aria-label="Bingo board"></div>
+          </div>
+
+          <div class="lifelist">
+            <div class="lifehead">
+              <span class="lifenum">247</span>
+              <span>things found since<br>March 2026</span>
+            </div>
+            <div class="lifegrid" id="lifegrid"></div>
+          </div>
+
+          <div class="scrim" id="scrim"></div>
+          <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shName">
+            <div class="grab"></div>
+            <h3 id="shName">Trout Lily</h3>
+            <p class="sci" id="shSci"></p>
+            <p class="hint" id="shHint"></p>
+
+            <div class="finder" id="finder">
+              <video id="vid" playsinline muted></video>
+              <button class="shutter" type="button" id="shutter" aria-label="Take photo"></button>
+            </div>
+            <p class="camnote" id="camNote" hidden></p>
+            <p class="pipe" id="pipe" hidden></p>
+
+            <div class="pair">
+              <div class="pane">
+                <span class="cap">Reference</span>
+                <span class="frame" id="refFrame"><span class="empty">No open-licence photo for this item</span></span>
+                <span class="credit" id="refCredit"></span>
+              </div>
+              <div class="pane">
+                <span class="cap">Your photo</span>
+                <span class="frame" id="myFrame"><span class="empty">Not marked yet</span></span>
+                <span class="credit" id="myCredit"></span>
+              </div>
+            </div>
+
+            <div class="row" id="shRow"></div>
+          </div>
+          <input type="file" id="fileIn" accept="image/*" capture="environment">
+          <canvas id="petals"></canvas>
+
+          <div class="wincard" id="wincard">
+            <h3 id="winTitle">Bingo on <em>Trillium</em></h3>
+            <p id="winSub">Diagonal, 14 marks, 6 days. Sarah had 11.</p>
+            <div class="row">
+              <button class="btn" type="button" id="againBtn">Play again</button>
+              <button class="btn ghost" type="button" id="shareBtn">Share card</button>
+            </div>
+          </div>
+
+          <div class="syncbar" id="syncbar"></div>
+
+          <div class="tabbar">
+            <button class="tab" type="button" data-view="games" aria-selected="true"><span class="ti">&#9635;</span>Games</button>
+            <button class="tab" type="button" data-view="find" aria-selected="false"><span class="ti">&#9906;</span>Find</button>
+            <button class="tab" type="button" data-view="list" aria-selected="false"><span class="ti">&#9634;</span>List</button>
+            <button class="tab" type="button" data-view="you" aria-selected="false"><span class="ti">&#9679;</span>You</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ctrls">
+        <button class="ctrl" type="button" id="modeBtn" aria-pressed="false">Photo mode</button>
+        <button class="ctrl" type="button" id="offlineBtn" aria-pressed="true">Offline</button>
+        <button class="ctrl" type="button" id="resetBtn">Reset board</button>
+      </div>
+    </div>
+
+    <aside class="rail">
+      <p class="railnote">The rail below is <b>live telemetry</b>, not captions. It reports the board's
+      actual state, the motion spec of whatever you just did, and the palette token currently in play
+      with its measured contrast ratio. Switch games with the chips to see the accent system work.
+      Tap a player to open their board. Photo mode takes an actual photograph and runs the
+      real compression pipeline on it.</p>
+
+      <div class="panel">
+        <h3>Board state</h3>
+        <dl class="kv">
+          <dt>game</dt><dd id="sGame">Ozark Spring Ephemerals</dd>
+          <dt>mode</dt><dd id="sMode">Honor</dd>
+          <dt>your marks</dt><dd id="sMarks">7 of 24</dd>
+          <dt>one away on</dt><dd id="sAway" class="soft">nothing yet</dd>
+          <dt>queued</dt><dd id="sQueue" class="soft">0 marks, 0 photos</dd>
+          <dt>typical bingo</dt><dd id="sTyp" class="soft">13 marks (p10 9, p90 16)</dd>
+        </dl>
+      </div>
+
+      <div class="panel">
+        <h3>Last interaction</h3>
+        <p id="lastMove">Board is seeded at 7 marks so it opens in a real
+state rather than empty. Tap any square.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Accent in play</h3>
+        <div class="swatches" id="swatches"></div>
+        <dl class="kv">
+          <dt>fill</dt><dd id="tFill">#F0B040</dd>
+          <dt>ink on fill</dt><dd id="tInk">Loam #2B2722</dd>
+          <dt>contrast</dt><dd id="tRatio">7.76 : 1 &nbsp;AA</dd>
+          <dt>deep (text)</dt><dd id="tDeep" class="soft">#8A5A00 on cream, 5.55 : 1</dd>
+        </dl>
+      </div>
+
+      <div class="panel">
+        <h3>16 ways to win</h3>
+        <div class="patterns">
+          <div class="pat"><div class="mini" data-pat="row"></div><span>row &times;5</span></div>
+          <div class="pat"><div class="mini" data-pat="col"></div><span>col &times;5</span></div>
+          <div class="pat"><div class="mini" data-pat="diag"></div><span>diag &times;2</span></div>
+          <div class="pat"><div class="mini" data-pat="stamp"></div><span>stamp &times;4</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Measured difficulty &middot; 400,000 boards</h3>
+        <div style="overflow-x:auto">
+        <table>
+          <tr><th>Ruleset</th><th>mean</th><th>p10</th><th>med</th><th>p90</th></tr>
+          <tr class="hi"><td>Free space + stamps</td><td>12.8</td><td>9</td><td>13</td><td>16</td></tr>
+          <tr><td>Free space, lines only</td><td>13.6</td><td>10</td><td>14</td><td>17</td></tr>
+          <tr><td>No free space + stamps</td><td>13.9</td><td>10</td><td>14</td><td>17</td></tr>
+          <tr><td>No free space, lines</td><td>14.9</td><td>11</td><td>15</td><td>18</td></tr>
+        </table>
+        </div>
+        <p class="foot">The postage stamp costs only 0.8 marks, so it is safe to leave on.
+        A player sits one square from a bingo for an average of 5.2 marks, which is why the
+        near-bingo state is a quiet breathe and never a notification.</p>
+      </div>
+
+      <p class="foot">Photo fills are generated placeholders, not photographs.
+      Everything else here matches <code>docs/</code>.</p>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ------------------------------------------------------------- palette */
+const ACCENTS = {
+  trout:   {name:'Trout Lily',    fill:'#F0B040', ink:'#2B2722', inkName:'Loam #2B2722', deep:'#8A5A00', soft:'#FFC96B', ratio:'7.76', deepRatio:'5.55'},
+  beauty:  {name:'Spring Beauty', fill:'#EE7FA8', ink:'#2B2722', inkName:'Loam #2B2722', deep:'#A8305C', soft:'#F7A8C3', ratio:'5.82', deepRatio:'6.06'},
+  mayapple:{name:'Mayapple',      fill:'#4FA968', ink:'#2B2722', inkName:'Loam #2B2722', deep:'#2A6E3C', soft:'#7FC793', ratio:'5.09', deepRatio:'5.79'},
+  hepatica:{name:'Hepatica',      fill:'#6FB4CE', ink:'#2B2722', inkName:'Loam #2B2722', deep:'#1F6280', soft:'#9AD0E3', ratio:'6.42', deepRatio:'6.31'},
+  bluebell:{name:'Bluebell',      fill:'#5566CC', ink:'#FFFFFF', inkName:'White #FFFFFF', deep:'#4353B5', soft:'#8E9AE4', ratio:'5.05', deepRatio:'6.26'},
+  redbud:  {name:'Redbud',        fill:'#9B4FB8', ink:'#FFFFFF', inkName:'White #FFFFFF', deep:'#7E3A99', soft:'#C08AD6', ratio:'4.99', deepRatio:'6.66'},
+  trillium:{name:'Trillium',      fill:'#C0453E', ink:'#FFFFFF', inkName:'White #FFFFFF', deep:'#A63530', soft:'#DE7C76', ratio:'5.05', deepRatio:'6.20'},
+};
+
+/* ------------------------------------------------------------- content */
+const I = (n,i,h,ref,sci) => ({n, i, h, ref, sci});
+const GAMES = [
+  {
+    id:'ozark', short:'Ozark Spring', name:'Ozark Spring Ephemerals',
+    accent:'trout', opp:'Sarah', mode:'photo', badge:2, days:6,
+    items:[
+      I('Trout Lily','\u{1F33C}','Mottled leaves, one nodding yellow flower','trout-lily','Erythronium americanum'),
+      I('Bloodroot','\u{1F90D}','White petals around a gold centre, leaf wrapped round the stem','bloodroot','Sanguinaria canadensis'),
+      I('Spring Beauty','\u{1F338}','Five pale petals with pink veins, grassy leaves','spring-beauty','Claytonia virginica'),
+      I("Dutchman's Breeches",'\u{1FAE7}','A row of tiny white trousers hung upside down','dutchmans-breeches','Dicentra cucullaria'),
+      I('Mayapple','\u{2602}','Twin umbrella leaves, the flower hides underneath','mayapple','Podophyllum peltatum'),
+      I('Virginia Bluebell','\u{1F514}','Pink buds that open sky blue','virginia-bluebell','Mertensia virginica'),
+      I('Trillium','\u{1F53A}','Three leaves, three petals, no stem to the leaves','trillium','Trillium recurvatum'),
+      I('Rue Anemone','\u{1F33F}','Thread stems, white flowers that shake in any wind','rue-anemone','Thalictrum thalictroides'),
+      I('Wild Ginger','\u{1FAD8}','Heart leaves, the brown flower sits on the ground','wild-ginger','Asarum canadense'),
+      I('Jack-in-the-Pulpit','\u{1FAB4}','A hooded green spathe over a standing spike','jack-in-the-pulpit','Arisaema triphyllum'),
+      I('Cutleaf Toothwort','\u{1F9B7}','Whorl of deeply cut leaves, white to pink cluster','cutleaf-toothwort','Cardamine concatenata'),
+      I('Blue-eyed Mary','\u{1F441}','Two-tone blue and white, low and easy to miss','blue-eyed-mary','Collinsia verna'),
+      I('FREE','\u{2605}','Free space'),
+      I('Celandine Poppy','\u{1F7E1}','Four bright yellow petals, orange sap if a stem breaks','celandine-poppy','Stylophorum diphyllum'),
+      I('Shooting Star','\u{2B50}','Swept-back petals on a nodding stalk','shooting-star','Primula meadia'),
+      I('Wood Betony','\u{1F33E}','Fern-like red leaves, a twisted yellow spiral of flowers','wood-betony','Pedicularis canadensis'),
+      I('Hepatica','\u{1FAB7}','Three-lobed leathery leaf, fuzzy stem, blue to white','hepatica','Anemone acutiloba'),
+      I('Fire Pink','\u{1F525}','Scarlet, notched petals, sticky stem','fire-pink','Silene virginica'),
+      I('Wild Blue Phlox','\u{1F4A0}','Five flat lavender petals, sweet at dusk','wild-blue-phlox','Phlox divaricata'),
+      I('Green Dragon','\u{1F409}','One leaf divided many ways, a long tongue of a spadix','green-dragon','Arisaema dracontium'),
+      I('Yellow Violet','\u{1F49B}','Heart leaves on the stem, not just at the base','yellow-violet','Viola pubescens'),
+      I('Ozark Wake Robin','\u{1F33A}','Small white trillium, Ozark endemic','ozark-wake-robin','Trillium pusillum'),
+      I('Pawpaw Bloom','\u{1F96D}','Maroon bell hanging before the leaves come out','pawpaw-bloom','Asimina triloba'),
+      I('False Rue Anemone','\u{1F343}','Five true petals, opposite leaves','false-rue-anemone','Enemion biternatum'),
+      I("Bishop's Cap",'\u{1F3A9}','Snowflake flowers on a bare wand','bishops-cap','Mitella diphylla'),
+    ],
+    mine:[0,1,3,8,11,19,22], theirs:[0,2,5,9,13,20],
+  },
+  {
+    id:'road', short:'Road Trip', name:'Highway 65 South',
+    accent:'bluebell', opp:'Dad', mode:'honor', badge:0, days:1,
+    items:[
+      I('Water tower','\u{1F5FC}','Town name on the tank'),
+      I('Hay bale','\u{1F33E}','Round or square, both count'),
+      I('Grain silo','\u{1F3D7}',''),
+      I('Hawk on a wire','\u{1F985}',''),
+      I('Barn quilt','\u{1F3A8}','Painted square on a barn face'),
+      I('Armadillo','\u{1F994}','Alive counts double'),
+      I('Church steeple','\u{26EA}',''),
+      I('Cattle in shade','\u{1F404}',''),
+      I('Fireworks stand','\u{1F386}',''),
+      I('Vanity plate','\u{1F697}',''),
+      I('Tractor crossing','\u{1F69C}',''),
+      I('Kudzu','\u{1F33F}','Swallowing something it should not'),
+      I('FREE','\u{2605}','Free space'),
+      I('Rusted pickup','\u{1F6FB}',''),
+      I('Town square gazebo','\u{1F3DB}',''),
+      I('Dairy Queen','\u{1F366}',''),
+      I('Crop duster','\u{2708}',''),
+      I('River bridge','\u{1F309}',''),
+      I('Turkey vulture','\u{1F983}',''),
+      I('Antique mall','\u{1F570}',''),
+      I('Grain elevator','\u{1F3ED}',''),
+      I('Now Hiring sign','\u{1F4CB}',''),
+      I('Ditch wildflowers','\u{1F490}',''),
+      I('Deer crossing sign','\u{1F98C}',''),
+      I('Combine harvester','\u{1F69C}',''),
+    ],
+    mine:[2,6,9,14,18,23], theirs:[1,2,6,7,14,18,21],
+  },
+  {
+    id:'birds', short:'Backyard Birds', name:'Backyard Birds, April',
+    accent:'mayapple', opp:'Jonah', mode:'photo', badge:1, days:12,
+    items:[
+      I('Northern Cardinal','\u{1F534}',''),
+      I('Blue Jay','\u{1F535}',''),
+      I('Carolina Wren','\u{1F426}','Loud for its size'),
+      I('Mourning Dove','\u{1F54A}',''),
+      I('Red-bellied Woodpecker','\u{1FAB5}',''),
+      I('Tufted Titmouse','\u{1F423}',''),
+      I('American Robin','\u{1F9A2}',''),
+      I('Eastern Bluebird','\u{1F499}',''),
+      I('Goldfinch','\u{1F49B}',''),
+      I('Carolina Chickadee','\u{26AB}',''),
+      I('House Finch','\u{1F3E0}',''),
+      I('Brown Thrasher','\u{1F90E}','State bird, long tail'),
+      I('FREE','\u{2605}','Free space'),
+      I('Downy Woodpecker','\u{1F332}',''),
+      I('Cedar Waxwing','\u{1F338}',''),
+      I('Hummingbird','\u{1F3F5}',''),
+      I('Barred Owl','\u{1F989}','Who cooks for you'),
+      I('Turkey Vulture','\u{1F983}',''),
+      I('Killdeer','\u{1F3C3}',''),
+      I('Indigo Bunting','\u{1F7E6}',''),
+      I('Purple Martin','\u{1F7EA}',''),
+      I('Pileated Woodpecker','\u{1F525}',''),
+      I('White-breasted Nuthatch','\u{2B1C}','Walks down trunks headfirst'),
+      I('Eastern Phoebe','\u{1F3B5}',''),
+      I('Common Grackle','\u{2728}',''),
+    ],
+    mine:[0,4,7,11,15,16,21,24], theirs:[0,1,4,7,9,15,16,21],
+  },
+];
+
+const LIFE = [
+  ['Trout Lily','\u{1F33C}','Mar 14','7'], ['Bloodroot','\u{1F90D}','Mar 9','11'],
+  ['Spring Beauty','\u{1F338}','Mar 11','23'], ['Bluebell','\u{1F514}','Mar 28','6'],
+  ['Trillium','\u{1F53A}','Apr 2','9'], ['Mayapple','\u{2602}','Apr 1','14'],
+  ['Fire Pink','\u{1F525}','May 4','3'], ['Barred Owl','\u{1F989}','Jan 22','5'],
+  ['Pawpaw Bloom','\u{1F96D}','Apr 12','2'],
+];
+
+/* reference photos: iNaturalist, research grade, flowering phenology,
+   filtered to cc0 / cc-by / cc-by-sa. [observer, licence] */
+const CREDITS = {
+  'bishops-cap':['tsn','cc-by'],
+  'bloodroot':['florawhite','cc-by'],
+  'blue-eyed-mary':['florawhite','cc-by'],
+  'celandine-poppy':['aberkov','cc-by'],
+  'cutleaf-toothwort':['actuallyaxley','cc-by'],
+  'dutchmans-breeches':['raffib128','cc0'],
+  'false-rue-anemone':['paulroots','cc-by'],
+  'fire-pink':['alicia_ballard','cc-by'],
+  'green-dragon':['alex_abair','cc-by'],
+  'hepatica':['christineyoung','cc-by'],
+  'jack-in-the-pulpit':['tsn','cc-by'],
+  'mayapple':['djlilelle','cc0'],
+  'ozark-wake-robin':['lauramorganclark','cc-by'],
+  'pawpaw-bloom':['supertiger','cc-by'],
+  'rue-anemone':['christineyoung','cc-by'],
+  'shooting-star':['pufferchung','cc-by'],
+  'spring-beauty':['victoriaelizabe','cc-by'],
+  'trillium':['rynxs','cc-by'],
+  'trout-lily':['sadawolk','cc-by'],
+  'virginia-bluebell':['jacobogre','cc-by-sa'],
+  'wild-blue-phlox':['hanly','cc-by'],
+  'wild-ginger':['danielatha','cc0'],
+  'wood-betony':['seigmond','cc-by'],
+  'yellow-violet':['ddennism','cc-by']
+};
+
+/* ------------------------------------------------------------- lines */
+const ROWS=[0,1,2,3,4].map(r=>[0,1,2,3,4].map(c=>r*5+c));
+const COLS=[0,1,2,3,4].map(c=>[0,1,2,3,4].map(r=>r*5+c));
+const DIAGS=[[0,6,12,18,24],[4,8,12,16,20]];
+const STAMPS=[[0,1,5,6],[3,4,8,9],[15,16,20,21],[18,19,23,24]];
+const LINES=[
+  ...ROWS.map((c,i)=>({kind:'row',label:'row '+(i+1),cells:c})),
+  ...COLS.map((c,i)=>({kind:'col',label:'column '+(i+1),cells:c})),
+  ...DIAGS.map((c,i)=>({kind:'diag',label:i?'anti-diagonal':'diagonal',cells:c})),
+  ...STAMPS.map((c,i)=>({kind:'stamp',label:['top-left','top-right','bottom-left','bottom-right'][i]+' stamp',cells:c})),
+];
+
+function evaluate(marked){
+  const filled=new Set([...marked,12]);
+  const complete=[]; const oneAway=[]; const awayLines=[];
+  for(const line of LINES){
+    const missing=line.cells.filter(c=>!filled.has(c));
+    if(missing.length===0) complete.push(line);
+    else if(missing.length===1){ oneAway.push(missing[0]); awayLines.push(line.label); }
+  }
+  return {complete, oneAway:[...new Set(oneAway)], awayLines:[...new Set(awayLines)]};
+}
+
+/* ------------------------------------------------------------- state */
+const state = GAMES.map(g=>({mine:new Set(g.mine), theirs:new Set(g.theirs),
+  queued:g.mine.length?2:0, queuedPhotos:1, photos:{}}));
+let gi = 0, viewingOpp = false, won = false, offline = true, startMarks = GAMES[0].mine.length;
+const G = () => GAMES[gi];
+const S = () => state[gi];
+const A = () => ACCENTS[G().accent];
+
+function applyAccent(){
+  const a=A(); const r=document.documentElement.style;
+  r.setProperty('--acc',a.fill); r.setProperty('--acc-ink',a.ink);
+  r.setProperty('--acc-deep',a.deep); r.setProperty('--acc-soft',a.soft);
+  $('#tFill').textContent=a.fill; $('#tInk').textContent=a.inkName;
+  $('#tRatio').innerHTML=a.ratio+' : 1 &nbsp;AA';
+  $('#tDeep').textContent=a.deep+' on cream, '+a.deepRatio+' : 1';
+  document.querySelectorAll('.sw').forEach(s=>s.classList.toggle('on', s.dataset.k===G().accent));
+}
+
+/* ------------------------------------------------------------- render */
+function photoFill(seed){
+  // daylight botany, not mud: greens, a few pinks, one gold
+  const base=[104,128,78,152,336,44,116][seed%7];
+  const h1=(base+(seed*11)%20)%360, h2=(h1+28)%360;
+  return 'radial-gradient(66% 74% at 34% 28%, hsl('+h1+' 54% 78%) 0%, hsl('+h1+' 44% 55%) 44%, hsl('+h2+' 38% 34%) 100%)';
+}
+
+function buildChips(){
+  const el=$('#chips'); el.textContent='';
+  GAMES.forEach((g,i)=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='chip'; b.setAttribute('role','tab');
+    b.setAttribute('aria-selected', i===gi?'true':'false');
+    b.style.color=ACCENTS[g.accent].deep;
+    const d=document.createElement('span'); d.className='dot'; d.style.background=ACCENTS[g.accent].fill;
+    const t=document.createElement('span'); t.textContent=g.short; t.style.color='var(--ink)';
+    b.append(d,t);
+    if(g.badge && i!==gi){ const n=document.createElement('span'); n.className='badge'; n.textContent=g.badge; b.append(n); }
+    b.addEventListener('click',()=>{ closeSheet(); gi=i; viewingOpp=false; won=false; startMarks=state[i].mine.size; renderAll();
+      note('Switched to '+g.name+'.\naccent → '+ACCENTS[g.accent].name+' '+ACCENTS[g.accent].fill+'\nchrome stays neutral, only the accent moves'); });
+    el.append(b);
+  });
+}
+
+function buildScore(){
+  const el=$('#scorerow'); el.textContent=''; const a=A(); const g=G(); const s=S();
+  [['You', s.mine.size, false],[g.opp, s.theirs.size, true]].forEach(([nm,ct,isOpp])=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='player'; b.style.color=a.deep;
+    b.setAttribute('aria-pressed', (isOpp===viewingOpp)?'true':'false');
+    const av=document.createElement('span'); av.className='av';
+    av.style.background=isOpp?'var(--surface-2)':a.fill; av.style.color=isOpp?'var(--ink-muted)':a.ink;
+    av.textContent=nm[0];
+    const w=document.createElement('span');
+    const n=document.createElement('span'); n.className='nm'; n.textContent=nm; n.style.color='var(--ink)';
+    const c=document.createElement('span'); c.className='ct'; c.textContent=ct+' marks';
+    w.append(n,document.createElement('br'),c);
+    b.append(av,w);
+    b.addEventListener('click',()=>{ closeSheet(); viewingOpp=isOpp; renderAll();
+      note(isOpp
+        ? 'Opened '+g.opp+"'s board.\nbackground wash + persistent pill, because a\nmis-tap on the wrong board is unforgivable\nnothing here can change game state"
+        : 'Back to your board.'); });
+    el.append(b);
+  });
+}
+
+function buildBoard(){
+  const el=$('#board'); el.textContent='';
+  const g=G(), s=S(), a=A();
+  const marks = viewingOpp ? s.theirs : s.mine;
+  const ev = evaluate(marks);
+  const away = (!viewingOpp && !won) ? new Set(ev.oneAway) : new Set();
+  const isPhoto = g.mode==='photo';
+
+  $('#boardwrap').classList.toggle('theirs', viewingOpp);
+  const v=$('#viewing');
+  v.textContent = g.opp+"'s board";
+  v.style.background = a.fill; v.style.color = a.ink;
+
+  g.items.forEach((it,idx)=>{
+    const c=document.createElement('button');
+    c.type='button'; c.className='cell'; c.dataset.idx=idx;
+    if(idx===12) c.classList.add('free');
+    if(isPhoto) c.classList.add('photo');
+    if(marks.has(idx)||idx===12) c.classList.add('marked');
+    if(away.has(idx)) c.classList.add('oneaway');
+    c.setAttribute('aria-label', it.n+', '+((marks.has(idx)||idx===12)?'marked':'not marked')+
+      ', row '+(Math.floor(idx/5)+1)+' column '+(idx%5+1));
+
+    if(isPhoto && marks.has(idx) && idx!==12){
+      const ph=document.createElement('span'); ph.className='ph';
+      const shot = !viewingOpp && s.photos[idx];
+      if(shot) ph.style.backgroundImage='url('+shot.thumb+')';
+      else ph.style.background=photoFill(idx+gi*7+(viewingOpp?3:0));
+      c.append(ph);
+    }
+    const ico=document.createElement('span'); ico.className='ico'; ico.textContent=it.i;
+    const lbl=document.createElement('span'); lbl.className='lbl'; lbl.textContent=idx===12?'FREE':it.n;
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('class','tick'); svg.setAttribute('viewBox','0 0 16 16');
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d','M3 8.6 L6.4 12 L13 4.4'); svg.append(p);
+    c.append(ico,lbl,svg);
+    c.addEventListener('pointerdown',onPress);
+    el.append(c);
+  });
+}
+
+function buildLife(){
+  const el=$('#lifegrid'); el.textContent='';
+  LIFE.forEach(([n,i,d,ct])=>{
+    const w=document.createElement('div'); w.className='lifeitem';
+    w.innerHTML='<span class="ico"></span><span class="nm"></span><span class="dt"></span><span class="n"></span>';
+    w.children[0].textContent=i; w.children[1].textContent=n;
+    w.children[2].textContent='first '+d; w.children[3].textContent='×'+ct;
+    el.append(w);
+  });
+}
+
+function buildMinis(){
+  const map={row:ROWS[2],col:COLS[1],diag:DIAGS[0],stamp:STAMPS[0]};
+  document.querySelectorAll('.mini').forEach(m=>{
+    m.textContent=''; const on=new Set(map[m.dataset.pat]);
+    for(let k=0;k<25;k++){ const i=document.createElement('i'); if(on.has(k)) i.className='on'; m.append(i); }
+  });
+}
+
+function buildSwatches(){
+  const el=$('#swatches'); el.textContent='';
+  Object.entries(ACCENTS).forEach(([k,a])=>{
+    const s=document.createElement('span'); s.className='sw'; s.dataset.k=k;
+    s.style.background=a.fill; s.style.color=a.ink; s.textContent=a.ratio;
+    s.title=a.name+' '+a.fill+', ink '+a.inkName+', '+a.ratio+':1';
+    el.append(s);
+  });
+}
+
+function syncbar(){
+  const el=$('#syncbar'); el.textContent=''; const g=G(), s=S();
+  const add=(t,live)=>{ const p=document.createElement('span'); p.className='pill'+(live?' live':''); p.textContent=t; el.append(p); };
+  add(g.mode==='photo'?'◉ PHOTO MODE':'○ HONOR MODE');
+  if(offline){ add((s.queued)+' MARKS QUEUED', true); if(g.mode==='photo') add(s.queuedPhotos+' PHOTO'+(s.queuedPhotos===1?'':'S')+' WAITING', true); }
+  else add('SYNCED');
+  $('#sig').textContent = offline ? 'NO SERVICE · 64%' : 'LTE · 64%';
+}
+
+function railState(){
+  const g=G(), s=S(); const ev=evaluate(s.mine);
+  $('#sGame').textContent=g.name;
+  $('#sMode').textContent=g.mode==='photo'?'Photo':'Honor';
+  $('#sMarks').textContent=s.mine.size+' of 24';
+  $('#sAway').textContent = won ? 'won' : (ev.awayLines.length ? ev.awayLines.join(', ') : 'nothing yet');
+  $('#sAway').className = (won||ev.awayLines.length)?'':'soft';
+  $('#sQueue').textContent = offline ? (s.queued+' marks, '+(g.mode==='photo'?s.queuedPhotos:0)+' photos') : 'nothing, synced';
+  $('#gameName').textContent=g.short;
+}
+
+function note(t){ $('#lastMove').textContent=t; }
+
+function renderAll(){ applyAccent(); buildChips(); buildScore(); buildBoard(); syncbar(); railState(); }
+
+/* ------------------------------------------------------------- marking */
+function onPress(e){
+  const cell=e.currentTarget; const idx=+cell.dataset.idx;
+  if(idx===12){ note('Free space. Always marked.\nWith it, centre lines and the postage stamp\nboth need 4, which keeps 16 win conditions level.'); return; }
+  const g=G(), s=S();
+
+  if(viewingOpp){ openSheet(idx); return; }
+  if(s.mine.has(idx) || won){ openSheet(idx); return; }
+  if(g.mode==='photo'){ openSheet(idx); return; }   // capture first, then the mark
+
+  const r=cell.getBoundingClientRect();
+  const x=(e.clientX!=null?e.clientX-r.left:r.width/2);
+  const y=(e.clientY!=null?e.clientY-r.top:r.height/2);
+  mark(cell, idx, x, y);
+}
+
+function mark(cell, idx, x, y){
+  const g=G(), s=S(), a=A();
+  s.mine.add(idx); s.queued++; if(g.mode==='photo') s.queuedPhotos++;
+  if(navigator.vibrate) try{ navigator.vibrate(8); }catch(_){}
+
+  if(!reduce){
+    cell.animate([{transform:'scale(.94)'},{transform:'scale(1.03)'},{transform:'scale(1)'}],
+      {duration:420, easing:'cubic-bezier(.2,.75,.3,1)'});
+    const b=document.createElement('span'); b.className='bloom';
+    b.style.left=x+'px'; b.style.top=y+'px'; cell.append(b);
+    b.animate([{transform:'translate(-50%,-50%) scale(0)'},{transform:'translate(-50%,-50%) scale(1)'}],
+      {duration:280, easing:'cubic-bezier(.2,.7,.3,1)', fill:'forwards'});
+    setTimeout(()=>b.remove(), 320);
+  }
+
+  if(g.mode==='photo'){
+    const ph=document.createElement('span'); ph.className='ph';
+    const shot=s.photos[idx];
+    if(shot) ph.style.backgroundImage='url('+shot.thumb+')';
+    else ph.style.background=photoFill(idx+gi*7);
+    cell.prepend(ph);
+  }
+  setTimeout(()=>{ cell.classList.add('marked'); }, reduce?0:170);
+
+  const ev=evaluate(s.mine);
+  note('Marked "'+g.items[idx].n+'"\n'+ (g.items[idx].h ? '“'+g.items[idx].h+'”\n' : '') +
+    'press scale .94 → spring(260, 18) back to 1\nbloom 280ms from the touch point, not the centre\ncheck draws as a stroke over 260ms\nhaptic on release, mark queued offline');
+
+  setTimeout(()=>{
+    buildScore(); syncbar(); railState();
+    // repaint one-away states without rebuilding the marked cell
+    const away=new Set(evaluate(s.mine).oneAway);
+    document.querySelectorAll('.cell').forEach(c=>{
+      c.classList.toggle('oneaway', away.has(+c.dataset.idx) && !won);
+    });
+    if(ev.complete.length) winSequence(ev.complete[0], idx);
+  }, reduce?10:460);
+}
+
+/* ------------------------------------------------------------- capture */
+let sheetIdx=null, stream=null;
+
+function kb(n){ return n>=1024*1024 ? (n/1048576).toFixed(2)+' MB' : Math.round(n/1024)+' KB'; }
+
+function stopCamera(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  $('#finder').classList.remove('on');
+}
+
+async function startCamera(){
+  const note=$('#camNote');
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    note.hidden=false;
+    note.textContent='No camera API on this origin. The button below opens your device camera or file picker, which runs the same pipeline.';
+    return false;
+  }
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920}}});
+    const v=$('#vid'); v.srcObject=stream; await v.play();
+    $('#finder').classList.add('on'); note.hidden=true; return true;
+  }catch(err){
+    note.hidden=false;
+    note.textContent='Live viewfinder unavailable here ('+err.name+'). Most likely the embedding page does not grant camera permission. The button below opens your device camera instead, which is the same capture path.';
+    return false;
+  }
+}
+
+/* The real pipeline from docs/05-architecture.md, running for real:
+   resize to 2048 long edge, JPEG q0.75, 400px thumb, and the canvas
+   re-encode is what drops EXIF, GPS included. */
+function processCapture(src, srcW, srcH, originalBytes){
+  const MAX=2048, TH=400;
+  const scale=Math.min(1, MAX/Math.max(srcW,srcH));
+  const w=Math.max(1,Math.round(srcW*scale)), h=Math.max(1,Math.round(srcH*scale));
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  c.getContext('2d').drawImage(src,0,0,w,h);
+  const fullUrl=c.toDataURL('image/jpeg',0.75);
+  const fullBytes=Math.round((fullUrl.length-fullUrl.indexOf(',')-1)*3/4);
+
+  const sq=Math.min(srcW,srcH);
+  const t=document.createElement('canvas'); t.width=t.height=TH;
+  t.getContext('2d').drawImage(src,(srcW-sq)/2,(srcH-sq)/2,sq,sq,0,0,TH,TH);
+  const thumb=t.toDataURL('image/jpeg',0.72);
+  const thumbBytes=Math.round((thumb.length-thumb.indexOf(',')-1)*3/4);
+
+  return {thumb, fullBytes, thumbBytes, w, h, originalBytes, srcW, srcH};
+}
+
+function showPipe(shot){
+  const el=$('#pipe'); el.hidden=false;
+  el.textContent =
+    'captured   '+shot.srcW+' x '+shot.srcH+(shot.originalBytes?'  '+kb(shot.originalBytes):'')+'\n'+
+    'resized    '+shot.w+' x '+shot.h+' long edge 2048\n'+
+    'jpeg q0.75 '+kb(shot.fullBytes)+'\n'+
+    'thumbnail  400 x 400  '+kb(shot.thumbBytes)+'\n'+
+    'exif       dropped by the canvas re-encode, GPS included';
+}
+
+function applyCapture(shot){
+  const idx=sheetIdx, s=S();
+  s.photos[idx]=shot;
+  const fresh=!s.mine.has(idx);
+  showPipe(shot);
+  $('#myFrame').innerHTML=''; const im=new Image(); im.src=shot.thumb; im.alt='Your photo';
+  $('#myFrame').append(im);
+  $('#myCredit').textContent='just now, on this device';
+  if(fresh){
+    const cell=document.querySelector('.cell[data-idx="'+idx+'"]');
+    setTimeout(()=>{ closeSheet(); if(cell){ const r=cell.getBoundingClientRect();
+      mark(cell, idx, r.width/2, r.height/2); } }, 900);
+  } else {
+    buildBoard(); railState();
+    note('Retook the photo for "'+G().items[idx].n+'".\nThe mark never moved. A retake replaces the image\nand queues a new upload; it is not a new sighting.');
+  }
+  renderSheetButtons();
+}
+
+function fromVideo(){
+  const v=$('#vid');
+  if(!v.videoWidth) return;
+  applyCapture(processCapture(v, v.videoWidth, v.videoHeight, 0));
+  stopCamera();
+}
+
+$('#shutter').addEventListener('click', fromVideo);
+
+$('#fileIn').addEventListener('change', e=>{
+  const f=e.target.files && e.target.files[0]; if(!f) return;
+  const url=URL.createObjectURL(f); const im=new Image();
+  im.onload=()=>{ applyCapture(processCapture(im, im.naturalWidth, im.naturalHeight, f.size));
+    URL.revokeObjectURL(url); };
+  im.onerror=()=>{ note('That file could not be read as an image.'); URL.revokeObjectURL(url); };
+  im.src=url; e.target.value='';
+});
+
+function renderSheetButtons(){
+  const row=$('#shRow'); row.textContent='';
+  const idx=sheetIdx, g=G(), s=S();
+  const add=(label,cls,fn)=>{ const b=document.createElement('button');
+    b.type='button'; b.className='btn'+(cls?' '+cls:''); b.textContent=label;
+    b.addEventListener('click',fn); row.append(b); return b; };
+
+  if(viewingOpp){ add('Close','ghost',closeSheet); return; }
+  const marked=s.mine.has(idx);
+
+  if(!marked && !won){
+    if(g.mode==='photo'){
+      add(stream?'Take photo':'Open camera','',()=>{ if(stream) fromVideo(); else $('#fileIn').click(); });
+      add('Choose a file','ghost',()=>{ $('#fileIn').removeAttribute('capture'); $('#fileIn').click();
+        setTimeout(()=>$('#fileIn').setAttribute('capture','environment'),400); });
+    } else {
+      add('Mark it','',()=>{ const cell=document.querySelector('.cell[data-idx="'+idx+'"]');
+        closeSheet(); if(cell){ const r=cell.getBoundingClientRect(); mark(cell, idx, r.width/2, r.height/2); } });
+      add('Close','ghost',closeSheet);
+    }
+  } else {
+    if(g.mode==='photo') add(s.photos[idx]?'Retake':'Add a photo','',()=>{
+      $('#fileIn').click(); });
+    add('Unmark','danger',()=>{
+      const b=row.querySelector('.danger');
+      if(b.dataset.armed){ s.mine.delete(idx); delete s.photos[idx]; s.queued=Math.max(0,s.queued-1);
+        closeSheet(); won=false; $('#wincard').classList.remove('up'); $('#board').classList.remove('tilt');
+        renderAll(); note('Unmarked "'+g.items[idx].n+'".\nA tombstone event, not a deleted row. Marks stay\nappend-only so two offline devices never conflict.');
+      } else { b.dataset.armed='1'; b.textContent='Tap again to unmark'; }
+    });
+    add('Close','ghost',closeSheet);
+  }
+}
+
+function openSheet(idx){
+  sheetIdx=idx;
+  const g=G(), s=S(), it=g.items[idx];
+  const marks = viewingOpp ? s.theirs : s.mine;
+  $('#shName').textContent = idx===12 ? 'Free space' : it.n;
+  $('#shSci').textContent = it.sci || '';
+  $('#shHint').textContent = it.h || 'No identification hint on this pack item.';
+
+  // reference pane
+  const rf=$('#refFrame'), rc=$('#refCredit'); rf.textContent=''; 
+  if(it.ref && CREDITS[it.ref]){
+    // published side by side with the page; in the repo they live in
+    // app/packs/ozark-spring/, so try there before giving up
+    const im=new Image(); im.src='ref/'+it.ref+'.jpg'; im.alt='Reference photo of '+it.n;
+    im.onerror=()=>{
+      if(!im.dataset.retried){ im.dataset.retried='1'; im.src='../app/packs/ozark-spring/'+it.ref+'.jpg'; return; }
+      rf.innerHTML='<span class="empty">Reference image not loaded</span>';
+    };
+    rf.append(im);
+    const [by,lic]=CREDITS[it.ref];
+    rc.textContent='iNaturalist · '+by+' · '+lic.toUpperCase();
+  } else {
+    rf.innerHTML='<span class="empty">No open-licence photo. Not every pack item is a species.</span>';
+    rc.textContent='';
+  }
+
+  // your pane
+  const mf=$('#myFrame'), mc=$('#myCredit'); mf.textContent=''; mc.textContent='';
+  const shot = !viewingOpp && s.photos[idx];
+  if(shot){ const im=new Image(); im.src=shot.thumb; im.alt='Your photo'; mf.append(im);
+    mc.textContent='on this device · '+kb(shot.fullBytes)+' after compression'; }
+  else if(viewingOpp && marks.has(idx)){
+    const d=document.createElement('span'); d.style.cssText='position:absolute;inset:0;background:'+photoFill(idx+gi*7+3);
+    mf.append(d); mc.textContent=g.opp+"'s photo";
+    $('#myFrame').previousElementSibling.textContent=g.opp+"'s photo";
+  }
+  else mf.innerHTML='<span class="empty">'+(marks.has(idx)?'Marked, no photo':'Not marked yet')+'</span>';
+  if(!viewingOpp) $('#myFrame').previousElementSibling.textContent='Your photo';
+
+  $('#pipe').hidden=true; $('#camNote').hidden=true;
+  renderSheetButtons();
+  $('#scrim').classList.add('on'); $('#sheet').classList.add('up');
+
+  if(!viewingOpp && !marks.has(idx) && g.mode==='photo' && !won)
+    startCamera().then(()=>{ if(sheetIdx===idx) renderSheetButtons(); });
+
+  note(viewingOpp
+    ? 'Looking at '+g.opp+"'s square.\nReference next to their photo is the whole\nverification story. No dispute flow, no challenge:\nyou can just see it."
+    : 'Opened "'+it.n+'".\nReference photo sits here, never on the square face.\nPutting it on the face gives away the identification\nand collides with your own photo.');
+}
+
+function closeSheet(){
+  stopCamera(); $('#scrim').classList.remove('on'); $('#sheet').classList.remove('up'); sheetIdx=null;
+}
+$('#scrim').addEventListener('click', closeSheet);
+
+/* ------------------------------------------------------------- winning */
+function winSequence(line, closingIdx){
+  won=true; const g=G(), s=S(), a=A();
+  const cells=[...document.querySelectorAll('.cell')];
+  const step = reduce?0:60;
+
+  line.cells.forEach((ci,k)=>setTimeout(()=>{
+    const c=cells[ci]; if(!c) return; c.classList.remove('flash'); void c.offsetWidth;
+    c.classList.add('flash'); setTimeout(()=>c.classList.remove('flash'), 420);
+  }, k*step));
+  document.querySelectorAll('.cell').forEach(c=>c.classList.remove('oneaway'));
+
+  setTimeout(()=>{ if(!reduce) $('#board').classList.add('tilt'); }, step*5);
+  setTimeout(()=>{ if(!reduce) petals(a.fill, a.soft); }, step*5+60);
+
+  const used = s.mine.size;
+  setTimeout(()=>{
+    $('#winTitle').innerHTML = 'Bingo on <em>'+g.items[closingIdx].n+'</em>';
+    $('#winSub').textContent = cap(line.label)+', '+used+' marks, '+g.days+
+      (g.days===1?' day':' days')+'. '+g.opp+' had '+s.theirs.size+'.';
+    $('#wincard').classList.add('up');
+  }, reduce?120:700);
+
+  note('BINGO · '+line.label+'\nwinning line lights at 60ms stagger\nboard tilts 2.6°, petals in '+a.fill+'\ncopy names the flower that closed it, not "BINGO"\n\noffline: this mark is stamped with bounded\nclient time. A rival bingo within 5 minutes is a\ntie and both players win.');
+  railState();
+}
+function cap(s){ return s[0].toUpperCase()+s.slice(1); }
+
+function petals(fill, soft){
+  const cv=$('#petals'); const scr=$('#screen');
+  const w=scr.clientWidth, h=scr.clientHeight, dpr=Math.min(devicePixelRatio||1,2);
+  cv.width=w*dpr; cv.height=h*dpr; cv.style.width=w+'px'; cv.style.height=h+'px';
+  const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+  const N=42, parts=[];
+  for(let i=0;i<N;i++){
+    parts.push({
+      x:w/2+(Math.random()-.5)*w*.55, y:h*.44+(Math.random()-.5)*70,
+      vx:(Math.random()-.5)*3.4, vy:-3.2-Math.random()*4.6,
+      r:3.2+Math.random()*4.6, a:Math.random()*Math.PI*2, va:(Math.random()-.5)*.28,
+      c: Math.random()<.45 ? soft : fill, life:0, max:70+Math.random()*40,
+    });
+  }
+  let raf;
+  (function frame(){
+    ctx.clearRect(0,0,w,h); let alive=false;
+    for(const p of parts){
+      p.life++; if(p.life>p.max) continue; alive=true;
+      p.vy+=.13; p.vx*=.992; p.x+=p.vx; p.y+=p.vy; p.a+=p.va;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a);
+      ctx.globalAlpha=Math.max(0,1-p.life/p.max); ctx.fillStyle=p.c;
+      ctx.beginPath(); ctx.moveTo(0,-p.r);
+      ctx.quadraticCurveTo(p.r*.95,-p.r*.28, 0, p.r);
+      ctx.quadraticCurveTo(-p.r*.95,-p.r*.28, 0,-p.r);
+      ctx.fill(); ctx.restore();
+    }
+    if(alive) raf=requestAnimationFrame(frame); else ctx.clearRect(0,0,w,h);
+  })();
+}
+
+/* ------------------------------------------------------------- controls */
+function resetBoard(){
+  won=false; viewingOpp=false;
+  const g=G(); state[gi]={mine:new Set(g.mine), theirs:new Set(g.theirs), queued:2, queuedPhotos:1, photos:{}};
+  $('#wincard').classList.remove('up'); $('#board').classList.remove('tilt');
+  const ctx=$('#petals').getContext('2d'); ctx.clearRect(0,0,9999,9999);
+  renderAll(); note('Board reset to its seeded state: 7 marks,\nno line yet at one away. Tap a square.');
+}
+
+$('#resetBtn').addEventListener('click', ()=>{ closeSheet(); resetBoard(); });
+$('#againBtn').addEventListener('click', resetBoard);
+$('#shareBtn').addEventListener('click', ()=>note(
+  'Share card would render the finished board as an\nimage: 24 squares, your photos, the winning line,\nthe date range. This is the acquisition channel\nand it costs about a day to build.'));
+
+$('#modeBtn').addEventListener('click', e=>{
+  const g=G(); g.mode = g.mode==='photo' ? 'honor' : 'photo';
+  e.currentTarget.setAttribute('aria-pressed', g.mode==='photo');
+  e.currentTarget.textContent = g.mode==='photo' ? 'Photo mode' : 'Honor mode';
+  renderAll();
+  note(g.mode==='photo'
+    ? 'Photo mode on. This one is real.\nTap any unmarked square and the sheet opens your\ncamera. The mark lands when the shutter fires, not\nwhen the upload finishes: out of signal you must\nstill be able to mark.'
+    : 'Honor mode on.\nTap and it is marked. This is the default, because\nit is the mode that works while you are holding\nbinoculars in the rain.');
+});
+
+$('#offlineBtn').addEventListener('click', e=>{
+  offline=!offline; e.currentTarget.setAttribute('aria-pressed', offline);
+  e.currentTarget.textContent = offline ? 'Offline' : 'Online';
+  if(!offline){ S().queued=0; S().queuedPhotos=0; }
+  syncbar(); railState();
+  note(offline
+    ? 'Airplane mode.\nEverything still works: marking, photos, board\nviewing, win detection, the Life List. No screen\nin this app ever awaits the network.'
+    : 'Back on signal.\nOutbox drained. Marks are append-only facts, so\nthe merge has no conflict to resolve: two devices\nrecording the same mark is the same fact twice.');
+});
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    closeSheet();
+    const v=t.dataset.view;
+    document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected', x===t));
+    $('#screen').classList.toggle('list', v==='list');
+    if(v==='list'){ $('#gameName').textContent='Life List';
+      note('The Life List.\nEvery distinct thing you have ever marked, with\nyour photo and the date, kept after the game that\nproduced it is deleted. It is the reason to open\nthis app in July, and the only framing under which\npeople reliably take the photo.'); }
+    else if(v==='games'){ railState(); note('Games. The multi-game tab strip is the chip row:\ncolour first, name second, badge for new activity.'); }
+    else note(v==='find'
+      ? 'Find. Curated packs, pack search, friends’ open\ngames. Typing a theme surfaces an existing pack\nbefore it offers to generate a new one.'
+      : 'You. Stats, achievements, friends, settings.\nEight achievements at v1, all tied to what happened\noutside: First Bloom, Ephemeral, Slow Bloom, Dawn\nPatrol, Corner Store, Full Bloom, Herbarium,\nSame Woods.');
+  });
+});
+
+buildSwatches(); buildMinis(); buildLife(); renderAll();
+})();
+</script>

@@ -1,0 +1,44 @@
+# Springo. The app is plain HTML, CSS and ES modules with no build step, so
+# `app/` is published as-is and the site root is the game itself.
+# The dependencies in package.json exist only for the two functions.
+
+[build]
+  publish = "app"
+  command = ""
+
+[functions]
+  directory = "netlify/functions"
+
+# sw.js decides when every other cached file updates, so it must never be
+# cached itself. A stale service worker pins users to an old build forever.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/packs/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

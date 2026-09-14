@@ -1,0 +1,316 @@
+{
+"id": "ozark-fall",
+"title": "Ozark Fall",
+"subtitle": "Fungi, fruit and colour, September to November",
+"region": "Ozarks",
+"season": "fall",
+"accent": "trillium",
+"photoDir": "packs/ozark-fall/",
+"credits": {
+"chicken-of-the-woods": [
+"phillymycobeth",
+"cc0"
+],
+"turkey-tail": [
+"kenkneidel",
+"cc0"
+],
+"giant-puffball": [
+"jacqui-nz",
+"cc-by"
+],
+"oyster-mushroom": [
+"treegrow",
+"cc-by"
+],
+"jack-o-lantern": [
+"alex_abair",
+"cc-by"
+],
+"hen-of-the-woods": [
+"phillymycobeth",
+"cc0"
+],
+"earthstar": [
+"alan_rockefeller",
+"cc-by"
+],
+"stinkhorn": [
+"alan_rockefeller",
+"cc-by"
+],
+"birds-nest-fungus": [
+"alexis_orion",
+"cc-by"
+],
+"dead-mans-fingers": [
+"novapatch",
+"cc-by-sa"
+],
+"witches-butter": [
+"westerbraenature",
+"cc0"
+],
+"sugar-maple": [
+"tsn",
+"cc-by"
+],
+"persimmon": [
+"supertiger",
+"cc-by"
+],
+"pawpaw-fruit": [
+"supertiger",
+"cc-by"
+],
+"hickory-nut": [
+"sadawolk",
+"cc-by"
+],
+"osage-orange": [
+"finzelflowers",
+"cc-by-sa"
+],
+"goldenrod": [
+"gillydilly",
+"cc0"
+],
+"new-england-aster": [
+"er-birds",
+"cc-by"
+],
+"monarch": [
+"jon_sullivan",
+"cc-by"
+],
+"white-throated-sparrow": [
+"sadawolk",
+"cc-by"
+],
+"woolly-bear": [
+"charlie",
+"cc-by"
+]
+},
+"items": [
+{
+"key": "chicken-of-the-woods",
+"label": "Chicken of the Woods",
+"hint": "Shelves of bright orange and yellow on a dead trunk",
+"emoji": "🍗",
+"rarity": 2,
+"sci": "Laetiporus sulphureus",
+"photo": "chicken-of-the-woods.jpg"
+},
+{
+"key": "turkey-tail",
+"label": "Turkey Tail",
+"hint": "Thin banded fans, velvety, white pore underside",
+"emoji": "🦃",
+"rarity": 1,
+"sci": "Trametes versicolor",
+"photo": "turkey-tail.jpg"
+},
+{
+"key": "giant-puffball",
+"label": "Giant Puffball",
+"hint": "A white ball in the grass, sometimes football sized",
+"emoji": "⚪",
+"rarity": 3,
+"sci": "Calvatia gigantea",
+"photo": "giant-puffball.jpg"
+},
+{
+"key": "oyster-mushroom",
+"label": "Oyster Mushroom",
+"hint": "Pale shelving caps, gills running down a stubby stem",
+"emoji": "🦪",
+"rarity": 2,
+"sci": "Pleurotus ostreatus",
+"photo": "oyster-mushroom.jpg"
+},
+{
+"key": "jack-o-lantern",
+"label": "Jack-o'-Lantern",
+"hint": "Dense orange clump at a stump base. Glows faintly. Toxic",
+"emoji": "🎃",
+"rarity": 3,
+"sci": "Omphalotus illudens",
+"photo": "jack-o-lantern.jpg"
+},
+{
+"key": "hen-of-the-woods",
+"label": "Hen of the Woods",
+"hint": "Grey feathered rosette at the foot of an oak",
+"emoji": "🐔",
+"rarity": 4,
+"sci": "Grifola frondosa",
+"photo": "hen-of-the-woods.jpg"
+},
+{
+"key": "earthstar",
+"label": "Earthstar",
+"hint": "A puffball sitting in a split star of leathery rays",
+"emoji": "⭐",
+"rarity": 4,
+"sci": "Geastrum",
+"photo": "earthstar.jpg"
+},
+{
+"key": "stinkhorn",
+"label": "Stinkhorn",
+"hint": "You will smell it before you see it. Slimy dark tip",
+"emoji": "👃",
+"rarity": 3,
+"sci": "Phallus",
+"photo": "stinkhorn.jpg"
+},
+{
+"key": "birds-nest-fungus",
+"label": "Bird's Nest Fungus",
+"hint": "Cups a few mm wide holding egg-like spore packets",
+"emoji": "🪹",
+"rarity": 5,
+"sci": "Cyathus striatus",
+"photo": "birds-nest-fungus.jpg"
+},
+{
+"key": "dead-mans-fingers",
+"label": "Dead Man's Fingers",
+"hint": "Blunt black clubs pushing out of rotting wood",
+"emoji": "🖐",
+"rarity": 3,
+"sci": "Xylaria polymorpha",
+"photo": "dead-mans-fingers.jpg"
+},
+{
+"key": "witches-butter",
+"label": "Witch's Butter",
+"hint": "Gelatinous yellow blobs on a damp fallen branch",
+"emoji": "🧈",
+"rarity": 3,
+"sci": "Tremella mesenterica",
+"photo": "witches-butter.jpg"
+},
+{
+"key": "sugar-maple",
+"label": "Sugar Maple in colour",
+"hint": "Five lobes, orange to scarlet, the classic one",
+"emoji": "🍁",
+"rarity": 1,
+"sci": "Acer saccharum",
+"photo": "sugar-maple.jpg"
+},
+{
+"key": null,
+"label": "FREE",
+"hint": "Free space",
+"emoji": "★",
+"rarity": 1
+},
+{
+"key": "sassafras",
+"label": "Sassafras",
+"hint": "Mitten, thumbless and two-thumbed leaves on one tree",
+"emoji": "🧤",
+"rarity": 2,
+"sci": "Sassafras albidum"
+},
+{
+"key": "persimmon",
+"label": "Persimmon fruit",
+"hint": "Orange, plum sized, only edible once frost-soft",
+"emoji": "🟠",
+"rarity": 2,
+"sci": "Diospyros virginiana",
+"photo": "persimmon.jpg"
+},
+{
+"key": "pawpaw-fruit",
+"label": "Pawpaw fruit",
+"hint": "Green mango shape hanging in a shady bottom",
+"emoji": "🥭",
+"rarity": 4,
+"sci": "Asimina triloba",
+"photo": "pawpaw-fruit.jpg"
+},
+{
+"key": "black-walnut",
+"label": "Black Walnut husk",
+"hint": "Green tennis ball that stains your hands brown",
+"emoji": "🌰",
+"rarity": 1,
+"sci": "Juglans nigra"
+},
+{
+"key": "hickory-nut",
+"label": "Hickory nut",
+"hint": "Four-sectioned husk splitting off a pale nut",
+"emoji": "🥜",
+"rarity": 2,
+"sci": "Carya",
+"photo": "hickory-nut.jpg"
+},
+{
+"key": "osage-orange",
+"label": "Osage Orange",
+"hint": "Brain-textured green sphere, heavy, under a hedge tree",
+"emoji": "🟢",
+"rarity": 2,
+"sci": "Maclura pomifera",
+"photo": "osage-orange.jpg"
+},
+{
+"key": "goldenrod",
+"label": "Goldenrod",
+"hint": "Arching plumes of tiny yellow flowers on a roadside",
+"emoji": "💛",
+"rarity": 1,
+"sci": "Solidago",
+"photo": "goldenrod.jpg"
+},
+{
+"key": "new-england-aster",
+"label": "Aster",
+"hint": "Purple rays with a gold centre, late and cold-tolerant",
+"emoji": "💜",
+"rarity": 2,
+"sci": "Symphyotrichum novae-angliae",
+"photo": "new-england-aster.jpg"
+},
+{
+"key": "monarch",
+"label": "Monarch",
+"hint": "Orange with black veins, heading south",
+"emoji": "🦋",
+"rarity": 3,
+"sci": "Danaus plexippus",
+"photo": "monarch.jpg"
+},
+{
+"key": "white-throated-sparrow",
+"label": "White-throated Sparrow",
+"hint": "Striped crown, yellow spot by the eye. Arrives in October",
+"emoji": "🐦",
+"rarity": 2,
+"sci": "Zonotrichia albicollis",
+"photo": "white-throated-sparrow.jpg"
+},
+{
+"key": "woolly-bear",
+"label": "Woolly Bear",
+"hint": "Black and rust banded caterpillar crossing a road",
+"emoji": "🐛",
+"rarity": 2,
+"sci": "Pyrrharctia isabella",
+"photo": "woolly-bear.jpg"
+},
+{
+"key": "beaver-sign",
+"label": "Beaver sign",
+"hint": "A gnawed stump or a fresh cut sapling by water",
+"emoji": "🦫",
+"rarity": 4
+}
+]
+}

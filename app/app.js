@@ -1,0 +1,878 @@
+// Springo. Local-first: every screen reads IndexedDB, the network only fills
+// it and drains the outbox. Nothing here awaits a fetch on a render path.
+
+import { boardFor, evaluate, gameCode, stampFrom, decideWinners, FREE_IDX } from './game.js';
+import { meta, games, marks, photos, packs, outbox, uid, me, setName } from './store.js';
+import * as sync from './sync.js';
+
+const $ = s => document.querySelector(s);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PATTERNS = ['row', 'col', 'diag', 'stamp'];
+
+const ACCENTS = {
+  trout:    { fill: '#F0B040', ink: '#2B2722', deep: '#8A5A00', soft: '#FFC96B' },
+  beauty:   { fill: '#EE7FA8', ink: '#2B2722', deep: '#A8305C', soft: '#F7A8C3' },
+  mayapple: { fill: '#4FA968', ink: '#2B2722', deep: '#2A6E3C', soft: '#7FC793' },
+  hepatica: { fill: '#6FB4CE', ink: '#2B2722', deep: '#1F6280', soft: '#9AD0E3' },
+  bluebell: { fill: '#5566CC', ink: '#FFFFFF', deep: '#4353B5', soft: '#8E9AE4' },
+  redbud:   { fill: '#9B4FB8', ink: '#FFFFFF', deep: '#7E3A99', soft: '#C08AD6' },
+  trillium: { fill: '#C0453E', ink: '#FFFFFF', deep: '#A63530', soft: '#DE7C76' },
+};
+const ACCENT_KEYS = Object.keys(ACCENTS);
+const PACK_IDS = ['ozark-fall', 'ozark-spring', 'road-trip'];
+
+const S = {
+  me: null, games: [], marks: [], packs: {}, photos: new Map(),
+  gi: 0, view: 'board', viewingPlayer: null, sheetIdx: null,
+  setup: { packId: null, mode: 'honor', varied: false }, review: null, stream: null, queued: 0,
+};
+
+const game = () => S.games[S.gi] || null;
+const pack = g => S.packs[g && g.packId];
+const myMarks = g => S.marks.filter(m => m.gameId === g.id && m.playerId === S.me.id && !m.undoneAt);
+const marksOf = (g, pid) => S.marks.filter(m => m.gameId === g.id && m.playerId === pid && !m.undoneAt);
+
+function toast(msg, ms = 2600) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), ms);
+}
+const kb = n => n >= 1048576 ? (n / 1048576).toFixed(2) + ' MB' : Math.round(n / 1024) + ' KB';
+
+/* ------------------------------------------------------------------ packs */
+async function loadPack(id) {
+  if (S.packs[id]) return S.packs[id];
+  const cached = await packs.get(id);
+  if (cached) { S.packs[id] = cached; return cached; }
+  const p = await (await fetch(`packs/${id}.json`)).json();
+  await packs.put(p);            // cached so a game opens with no network, ever
+  S.packs[id] = p;
+  return p;
+}
+
+/* ------------------------------------------------------------- accent/CSS */
+function applyAccent(key) {
+  const a = ACCENTS[key] || ACCENTS.trout, r = document.documentElement.style;
+  r.setProperty('--acc', a.fill); r.setProperty('--acc-ink', a.ink);
+  r.setProperty('--acc-deep', a.deep); r.setProperty('--acc-soft', a.soft);
+}
+
+/* ------------------------------------------------------------------ views */
+function setView(v) {
+  S.view = v;
+  $('#viewBoard').classList.toggle('on', v === 'board');
+  for (const [id, name] of [['#viewNew', 'new'], ['#viewLife', 'life'], ['#viewYou', 'you'],
+                            ['#viewSetup', 'setup'], ['#viewInvite', 'invite'], ['#viewReview', 'review']]) {
+    $(id).classList.toggle('on', v === name);
+  }
+  document.querySelectorAll('.tab').forEach(t => {
+    const on = t.dataset.view === v
+            || (['setup', 'invite', 'review'].includes(v) && t.dataset.view === 'new');
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  $('#chips').style.display = v === 'board' ? '' : 'none';
+  const titles = { board: game() ? pack(game())?.title || 'Springo' : 'Springo',
+                   new: 'Springo', setup: 'New game', invite: 'Invite',
+                   review: 'Review the list', life: 'Life List', you: 'You' };
+  $('#screenTitle').textContent = titles[v] || 'Springo';
+  if (v === 'life') renderLife();
+  if (v === 'you') renderYou();
+  if (v === 'new') renderPackList();
+  if (v === 'board') {
+    const g = game();
+    if (g) { applyAccent(g.accent); renderScore(); renderBoard(); }
+  }
+  window.scrollTo(0, 0);
+}
+
+/* ------------------------------------------------------------------ chips */
+function renderChips() {
+  const el = $('#chips'); el.textContent = '';
+  S.games.forEach((g, i) => {
+    const p = pack(g); if (!p) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', i === S.gi ? 'true' : 'false');
+    const d = document.createElement('span'); d.className = 'dot';
+    d.style.background = (ACCENTS[g.accent] || ACCENTS.trout).fill;
+    const t = document.createElement('span'); t.textContent = p.title;
+    b.append(d, t);
+    if (g.unseen) { const n = document.createElement('span'); n.className = 'badge'; n.textContent = g.unseen; b.append(n); }
+    b.addEventListener('click', () => { S.gi = i; S.viewingPlayer = null; g.unseen = 0; games.put(g); renderAll(); });
+    el.append(b);
+  });
+  const add = document.createElement('button');
+  add.type = 'button'; add.className = 'chip add'; add.textContent = '+ New';
+  add.addEventListener('click', () => setView('new'));
+  el.append(add);
+}
+
+/* ------------------------------------------------------------------ score */
+function renderScore() {
+  const el = $('#scorerow'); el.textContent = ''; const g = game(); if (!g) return;
+  const a = ACCENTS[g.accent] || ACCENTS.trout;
+  const viewing = S.viewingPlayer || S.me.id;
+  for (const pl of g.players) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'player';
+    b.setAttribute('aria-pressed', pl.id === viewing ? 'true' : 'false');
+    const av = document.createElement('span'); av.className = 'av';
+    const isMe = pl.id === S.me.id;
+    av.style.background = isMe ? a.fill : 'var(--surface-2)';
+    av.style.color = isMe ? a.ink : 'var(--ink-muted)';
+    av.textContent = (pl.name || '?')[0].toUpperCase();
+    const w = document.createElement('span'); w.style.minWidth = '0';
+    const n = document.createElement('span'); n.className = 'nm'; n.textContent = isMe ? 'You' : pl.name;
+    const c = document.createElement('span'); c.className = 'ct';
+    const count = marksOf(g, pl.id).length;
+    c.textContent = count + (count === 1 ? ' mark' : ' marks');
+    w.append(n, document.createElement('br'), c);
+    b.append(av, w);
+    b.addEventListener('click', () => {
+      S.viewingPlayer = isMe ? null : pl.id;
+      closeSheet(); renderScore(); renderBoard();
+    });
+    el.append(b);
+  }
+}
+
+/* ------------------------------------------------------------------ board */
+function renderBoard() {
+  const el = $('#board'); el.textContent = ''; const g = game();
+  if (!g) { setView('new'); return; }
+  const p = pack(g);
+  const viewing = S.viewingPlayer || S.me.id;
+  const isMine = viewing === S.me.id;
+  const cells = boardFor(g, viewing, p);
+  const set = new Set(marksOf(g, viewing).map(m => m.idx));
+  const ev = evaluate(set, PATTERNS, g.freeSpace);
+  const away = isMine && !g.winners?.length ? new Set(ev.oneAway) : new Set();
+
+  $('#boardwrap').classList.toggle('theirs', !isMine);
+  const v = $('#viewing');
+  if (!isMine) {
+    const other = g.players.find(x => x.id === viewing);
+    v.textContent = (other?.name || 'Their') + "'s board";
+    const a = ACCENTS[g.accent] || ACCENTS.trout;
+    v.style.background = a.fill; v.style.color = a.ink;
+  }
+
+  cells.forEach((it, idx) => {
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'cell'; c.dataset.idx = idx;
+    const free = it.free || idx === FREE_IDX && g.freeSpace;
+    if (free) c.classList.add('free');
+    const marked = set.has(idx) || free;
+    if (marked) c.classList.add('marked');
+    if (away.has(idx)) c.classList.add('oneaway');
+    c.setAttribute('aria-label',
+      `${it.label}, ${marked ? 'marked' : 'not marked'}, row ${Math.floor(idx / 5) + 1} column ${idx % 5 + 1}`);
+
+    const shot = marked && !free ? S.photos.get(`${g.id}:${viewing}:${idx}`) : null;
+    if (shot) {
+      c.classList.add('hasphoto');
+      const ph = document.createElement('span'); ph.className = 'ph';
+      ph.style.backgroundImage = `url(${shot.thumbUrl})`; c.append(ph);
+    }
+    const ico = document.createElement('span'); ico.className = 'ico'; ico.textContent = it.emoji || '•';
+    const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = it.label;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'tick'); svg.setAttribute('viewBox', '0 0 16 16');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M3 8.6 L6.4 12 L13 4.4'); svg.append(path);
+    c.append(ico, lbl, svg);
+    c.addEventListener('pointerdown', onPress);
+    el.append(c);
+  });
+  renderSyncbar();
+}
+
+function renderSyncbar() {
+  const el = $('#syncbar'); el.textContent = ''; const g = game(); if (!g) return;
+  const add = (t, live) => { const s = document.createElement('span'); s.className = 'pill' + (live ? ' live' : ''); s.textContent = t; el.append(s); };
+  add(g.mode === 'photo' ? '◉ PHOTO' : '○ HONOR');
+  if (g.shared) add('CODE ' + g.code); else add('SOLO');
+  if (S.queued) add(S.queued + ' QUEUED', true);
+  else if (sync.cloudState() === false) add('LOCAL ONLY');
+  else if (!navigator.onLine) add('OFFLINE', true);
+  if (g.winners?.length) {
+    const names = g.winners.map(id => id === S.me.id ? 'You' : (g.players.find(p => p.id === id)?.name || '?'));
+    add((names.length > 1 ? 'TIE: ' : 'WON: ') + names.join(' + '));
+  }
+}
+
+/* ---------------------------------------------------------------- marking */
+function onPress(e) {
+  const cell = e.currentTarget, idx = +cell.dataset.idx;
+  const g = game(), p = pack(g);
+  const viewing = S.viewingPlayer || S.me.id;
+  const cells = boardFor(g, viewing, p);
+  if (cells[idx].free) { toast('Free space. Always yours.'); return; }
+  if (viewing !== S.me.id) { openSheet(idx); return; }
+  const set = new Set(myMarks(g).map(m => m.idx));
+  if (set.has(idx) || g.winners?.length || g.mode === 'photo') { openSheet(idx); return; }
+  const r = cell.getBoundingClientRect();
+  doMark(idx, e.clientX != null ? e.clientX - r.left : r.width / 2,
+              e.clientY != null ? e.clientY - r.top : r.height / 2);
+}
+
+async function doMark(idx, x, y, photo) {
+  const g = game();
+  const cell = $(`.cell[data-idx="${idx}"]`);
+  const stamp = stampFrom(sync.getAnchor());
+  const mark = {
+    id: uid(), gameId: g.id, playerId: S.me.id, idx,
+    ts: stamp.ts, bounded: stamp.bounded, anchor: stamp.anchor || null,
+    createdAt: Date.now(), undoneAt: null, hasPhoto: !!photo,
+  };
+  S.marks.push(mark);
+  await marks.put(mark);
+  if (g.shared) { await outbox.add({ id: mark.id, gameId: g.id, event: { type: 'mark', mark } }); S.queued++; }
+
+  if (photo) {
+    const key = `${g.id}:${S.me.id}:${idx}`;
+    const rec = { id: key, gameId: g.id, idx, markId: mark.id, ...photo };
+    await photos.put(rec);
+    S.photos.set(key, { ...rec, thumbUrl: URL.createObjectURL(rec.thumb) });
+  }
+
+  if (cell) {
+    if (navigator.vibrate) { try { navigator.vibrate(8); } catch {} }
+    if (!reduce) {
+      cell.animate([{ transform: 'scale(.94)' }, { transform: 'scale(1.03)' }, { transform: 'scale(1)' }],
+        { duration: 420, easing: 'cubic-bezier(.2,.75,.3,1)' });
+      const b = document.createElement('span'); b.className = 'bloom';
+      b.style.left = x + 'px'; b.style.top = y + 'px'; cell.append(b);
+      b.animate([{ transform: 'translate(-50%,-50%) scale(0)' }, { transform: 'translate(-50%,-50%) scale(1)' }],
+        { duration: 280, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' });
+      setTimeout(() => b.remove(), 320);
+    }
+    const shot = S.photos.get(`${g.id}:${S.me.id}:${idx}`);
+    if (shot) {
+      cell.classList.add('hasphoto');
+      const ph = document.createElement('span'); ph.className = 'ph';
+      ph.style.backgroundImage = `url(${shot.thumbUrl})`; cell.prepend(ph);
+    }
+    setTimeout(() => cell.classList.add('marked'), reduce ? 0 : 170);
+  }
+
+  setTimeout(async () => {
+    renderScore(); renderSyncbar(); renderChips();
+    const set = new Set(myMarks(g).map(m => m.idx));
+    const ev = evaluate(set, PATTERNS, g.freeSpace);
+    const away = new Set(ev.won ? [] : ev.oneAway);
+    document.querySelectorAll('.cell').forEach(c => c.classList.toggle('oneaway', away.has(+c.dataset.idx)));
+    if (ev.won && !g.winners?.length) await declareWin(ev.complete[0], idx, mark);
+    sync.syncGame(g.id).then(n => { S.queued = 0; renderSyncbar(); if (n) refresh(); });
+  }, reduce ? 10 : 460);
+}
+
+async function declareWin(line, closingIdx, mark) {
+  const g = game(), p = pack(g);
+  g.wins = g.wins || [];
+  g.wins.push({ playerId: S.me.id, ts: mark.ts, bounded: mark.bounded, line: line.label });
+  g.winners = decideWinners(g.wins);
+  g.finishedAt = Date.now();
+  await games.put(g);
+  if (g.shared) await outbox.add({ id: 'win-' + g.id + '-' + S.me.id, gameId: g.id, event: { type: 'win', gameId: g.id, win: g.wins.at(-1) } });
+
+  const cells = [...document.querySelectorAll('.cell')];
+  const step = reduce ? 0 : 60;
+  line.cells.forEach((ci, k) => setTimeout(() => {
+    const c = cells[ci]; if (!c) return;
+    c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+    setTimeout(() => c.classList.remove('flash'), 420);
+  }, k * step));
+  if (!reduce) {
+    setTimeout(() => $('#board').classList.add('tilt'), step * 5);
+    setTimeout(() => petals(), step * 5 + 60);
+    setTimeout(() => $('#board').classList.remove('tilt'), 2600);
+  }
+  const item = boardFor(g, S.me.id, p)[closingIdx];
+  setTimeout(() => toast(`Bingo on ${item.label}. ${line.label}, ${myMarks(g).length} marks.`, 5200), reduce ? 100 : 700);
+  renderSyncbar();
+}
+
+function petals() {
+  const cv = $('#petals'), a = ACCENTS[game().accent] || ACCENTS.trout;
+  const w = innerWidth, h = innerHeight, dpr = Math.min(devicePixelRatio || 1, 2);
+  cv.width = w * dpr; cv.height = h * dpr; cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+  const parts = Array.from({ length: 46 }, () => ({
+    x: w / 2 + (Math.random() - .5) * w * .6, y: h * .45 + (Math.random() - .5) * 80,
+    vx: (Math.random() - .5) * 3.6, vy: -3.4 - Math.random() * 5,
+    r: 3.4 + Math.random() * 5, ang: Math.random() * 6.28, va: (Math.random() - .5) * .28,
+    c: Math.random() < .45 ? a.soft : a.fill, life: 0, max: 72 + Math.random() * 44,
+  }));
+  (function frame() {
+    ctx.clearRect(0, 0, w, h); let alive = false;
+    for (const p of parts) {
+      if (++p.life > p.max) continue; alive = true;
+      p.vy += .14; p.vx *= .992; p.x += p.vx; p.y += p.vy; p.ang += p.va;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.ang);
+      ctx.globalAlpha = Math.max(0, 1 - p.life / p.max); ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.moveTo(0, -p.r);
+      ctx.quadraticCurveTo(p.r * .95, -p.r * .28, 0, p.r);
+      ctx.quadraticCurveTo(-p.r * .95, -p.r * .28, 0, -p.r);
+      ctx.fill(); ctx.restore();
+    }
+    if (alive) requestAnimationFrame(frame); else ctx.clearRect(0, 0, w, h);
+  })();
+}
+
+/* ------------------------------------------------------------------ sheet */
+function stopCamera() {
+  if (S.stream) { S.stream.getTracks().forEach(t => t.stop()); S.stream = null; }
+  $('#finder').classList.remove('on');
+}
+
+async function startCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) return false;
+  try {
+    S.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 } },
+    });
+    const v = $('#vid'); v.srcObject = S.stream; await v.play();
+    $('#finder').classList.add('on');
+    return true;
+  } catch { return false; }
+}
+
+/** The pipeline from docs/05-architecture.md. The canvas re-encode is what
+ *  drops EXIF, GPS included, so the resize and the scrub are one step. */
+async function processCapture(src, w, h, originalBytes) {
+  const MAX = 2048, TH = 400;
+  const scale = Math.min(1, MAX / Math.max(w, h));
+  const cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+  const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+  c.getContext('2d').drawImage(src, 0, 0, cw, ch);
+  const full = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.75));
+  const sq = Math.min(w, h);
+  const t = document.createElement('canvas'); t.width = t.height = TH;
+  t.getContext('2d').drawImage(src, (w - sq) / 2, (h - sq) / 2, sq, sq, 0, 0, TH, TH);
+  const thumb = await new Promise(r => t.toBlob(r, 'image/jpeg', 0.72));
+  return { full, thumb, bytes: full.size, thumbBytes: thumb.size, w: cw, h: ch, srcW: w, srcH: h, originalBytes, takenAt: Date.now() };
+}
+
+function showPipe(s) {
+  const el = $('#pipe'); el.hidden = false;
+  el.textContent =
+    `captured   ${s.srcW} x ${s.srcH}${s.originalBytes ? '  ' + kb(s.originalBytes) : ''}\n` +
+    `resized    ${s.w} x ${s.h}  long edge 2048\n` +
+    `jpeg q.75  ${kb(s.bytes)}\n` +
+    `thumbnail  400 x 400  ${kb(s.thumbBytes)}\n` +
+    `exif       dropped by the re-encode, GPS included`;
+}
+
+async function applyCapture(shot) {
+  const idx = S.sheetIdx, g = game();
+  const key = `${g.id}:${S.me.id}:${idx}`;
+  const already = myMarks(g).some(m => m.idx === idx);
+  showPipe(shot);
+  const url = URL.createObjectURL(shot.thumb);
+  $('#myFrame').textContent = '';
+  const im = new Image(); im.src = url; im.alt = 'Your photo'; $('#myFrame').append(im);
+  $('#myCredit').textContent = 'just now · ' + kb(shot.bytes) + ' after compression';
+  stopCamera();
+
+  if (already) {
+    const prev = S.photos.get(key);
+    const rec = { id: key, gameId: g.id, idx, markId: prev?.markId || null, ...shot };
+    await photos.put(rec);
+    S.photos.set(key, { ...rec, thumbUrl: url });
+    renderBoard(); renderSheetButtons();
+    toast('Photo replaced. The mark did not move.');
+  } else {
+    setTimeout(async () => { closeSheet(); await doMark(idx, 0, 0, shot); }, 850);
+  }
+}
+
+function fromVideo() {
+  const v = $('#vid'); if (!v.videoWidth) return;
+  processCapture(v, v.videoWidth, v.videoHeight, 0).then(applyCapture);
+}
+
+function renderSheetButtons() {
+  const row = $('#shRow'); row.textContent = '';
+  const g = game(), idx = S.sheetIdx;
+  const viewing = S.viewingPlayer || S.me.id;
+  const add = (label, cls, fn) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn' + (cls ? ' ' + cls : ''); b.textContent = label;
+    b.addEventListener('click', fn); row.append(b); return b;
+  };
+  if (viewing !== S.me.id) { add('Close', 'ghost', closeSheet); return; }
+  const marked = myMarks(g).some(m => m.idx === idx);
+  const done = !!g.winners?.length;
+
+  if (!marked && !done) {
+    if (g.mode === 'photo') {
+      add(S.stream ? 'Take photo' : 'Open camera', '', () => S.stream ? fromVideo() : $('#fileIn').click());
+      add('Choose a file', 'ghost', () => {
+        const f = $('#fileIn'); f.removeAttribute('capture'); f.click();
+        setTimeout(() => f.setAttribute('capture', 'environment'), 500);
+      });
+    } else {
+      add('Mark it', '', () => { closeSheet(); doMark(idx, 0, 0); });
+      add('Close', 'ghost', closeSheet);
+    }
+  } else {
+    if (g.mode === 'photo') add(S.photos.has(`${g.id}:${S.me.id}:${idx}`) ? 'Retake' : 'Add a photo', '', () => $('#fileIn').click());
+    if (marked) add('Unmark', 'danger', async e => {
+      const b = e.currentTarget;
+      if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Tap again to unmark'; return; }
+      const m = myMarks(g).find(x => x.idx === idx);
+      m.undoneAt = Date.now();
+      await marks.put(m);
+      if (g.shared) await outbox.add({ id: 'undo-' + m.id, gameId: g.id, event: { type: 'mark', mark: m } });
+      const key = `${g.id}:${S.me.id}:${idx}`;
+      if (S.photos.has(key)) { await photos.remove(key); S.photos.delete(key); }
+      if (g.winners?.length) { g.winners = []; g.wins = []; g.finishedAt = null; await games.put(g); }
+      closeSheet(); renderAll();
+      toast('Unmarked. A tombstone, not a deleted row.');
+    });
+    add('Close', 'ghost', closeSheet);
+  }
+}
+
+function openSheet(idx) {
+  S.sheetIdx = idx;
+  const g = game(), p = pack(g);
+  const viewing = S.viewingPlayer || S.me.id;
+  const it = boardFor(g, viewing, p)[idx];
+  const theirs = viewing !== S.me.id;
+  const set = new Set(marksOf(g, viewing).map(m => m.idx));
+
+  $('#shName').textContent = it.label;
+  $('#shSci').textContent = it.sci || '';
+  $('#shHint').textContent = it.hint || 'No identification hint on this pack item.';
+
+  const rf = $('#refFrame'), rc = $('#refCredit'); rf.textContent = ''; rc.textContent = '';
+  if (it.photo && p.photoDir) {
+    const im = new Image(); im.src = p.photoDir + it.photo; im.alt = 'Reference photo of ' + it.label;
+    im.onerror = () => { rf.innerHTML = '<span class="empty">Reference photo not downloaded</span>'; };
+    rf.append(im);
+    const cr = p.credits?.[it.key];
+    if (cr) rc.textContent = `iNaturalist · ${cr[0]} · ${String(cr[1]).toUpperCase()}`;
+  } else {
+    rf.innerHTML = '<span class="empty">No open-licence photo. Not every item is a species.</span>';
+  }
+
+  const mf = $('#myFrame'), mc = $('#myCredit'); mf.textContent = ''; mc.textContent = '';
+  $('#myCap').textContent = theirs ? (g.players.find(x => x.id === viewing)?.name || 'Their') + "'s photo" : 'Your photo';
+  const shot = S.photos.get(`${g.id}:${viewing}:${idx}`);
+  if (shot) {
+    const im = new Image(); im.src = shot.thumbUrl; im.alt = 'Photo'; mf.append(im);
+    mc.textContent = new Date(shot.takenAt || Date.now()).toLocaleDateString() + ' · ' + kb(shot.bytes || 0);
+  } else {
+    mf.innerHTML = `<span class="empty">${set.has(idx) ? (theirs ? 'Marked, photo not synced' : 'Marked, no photo') : 'Not marked yet'}</span>`;
+  }
+
+  $('#pipe').hidden = true;
+  renderSheetButtons();
+  $('#scrim').classList.add('on'); $('#sheet').classList.add('up');
+  if (!theirs && !set.has(idx) && g.mode === 'photo' && !g.winners?.length) {
+    startCamera().then(ok => {
+      if (S.sheetIdx === idx) { renderSheetButtons(); if (!ok) toast('Camera unavailable here. Use Open camera.'); }
+    });
+  }
+}
+
+function closeSheet() {
+  stopCamera(); $('#scrim').classList.remove('on'); $('#sheet').classList.remove('up'); S.sheetIdx = null;
+}
+
+/* ------------------------------------------------------------ new / setup */
+function renderPackList() {
+  const el = $('#packList'); el.textContent = '';
+  // a reviewed list is a real pack, so it is replayable like any other
+  const customs = Object.values(S.packs).filter(p => p.custom).sort((a, b) => b.createdAt - a.createdAt);
+  for (const p of [...PACK_IDS.map(id => S.packs[id]), ...customs]) {
+    if (!p) continue;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'card';
+    const em = document.createElement('span'); em.className = 'em';
+    em.textContent = p.items.find(i => i.emoji && i.key)?.emoji || '◆';
+    const w = document.createElement('span'); w.style.minWidth = '0';
+    const t = document.createElement('span'); t.className = 't'; t.textContent = p.title;
+    const s = document.createElement('span'); s.className = 's'; s.textContent = p.subtitle;
+    w.append(t, document.createElement('br'), s);
+    const go = document.createElement('span'); go.className = 'go'; go.textContent = '›';
+    b.append(em, w, go);
+    b.addEventListener('click', () => { S.setup = { packId: p.id, mode: 'honor', varied: false }; openSetup(); });
+    el.append(b);
+  }
+}
+
+function openSetup() {
+  const p = S.packs[S.setup.packId];
+  if (!p) { setView('new'); return; }
+  $('#setupTitle').textContent = p.title;
+  document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === S.setup.mode));
+  document.querySelectorAll('[data-varied]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.varied === '1') === S.setup.varied));
+  const real = p.items.filter(i => i.key).length;
+  const withPhoto = p.items.filter(i => i.photo).length;
+  $('#setupNote').textContent =
+    `${real} items, ${withPhoto} with a reference photo.\n` +
+    `Typical bingo: 13 marks, usually 11 to 16.\n` +
+    (real <= 24 ? 'This pack is exactly 24 items, so varied boards fall back to same items.'
+                : `Varied boards can draw different items for each player from these ${real}.`);
+  setView('setup');
+}
+
+async function createGame() {
+  const p = S.packs[S.setup.packId];
+  const used = new Set(S.games.map(g => g.accent));
+  const accent = ACCENT_KEYS.find(k => !used.has(k)) || p.accent || 'trout';
+  const g = {
+    id: uid(), code: gameCode(), packId: p.id, accent,
+    mode: S.setup.mode, varied: S.setup.varied, freeSpace: true,
+    seed: uid().toUpperCase(), hostId: S.me.id,
+    players: [{ id: S.me.id, name: S.me.name || 'You' }],
+    createdAt: Date.now(), shared: false, unseen: 0, wins: [], winners: [],
+  };
+  await games.put(g);
+  S.games.unshift(g); S.gi = 0;
+  const ok = await sync.pushGame(g);
+  if (ok) { g.shared = true; await games.put(g); }
+  $('#inviteCode').textContent = g.code;
+  $('#inviteNote').textContent = ok
+    ? 'Anyone with this code joins and sees your board. Marks sync whenever either of you has signal.'
+    : 'No sync server is deployed, so this game is on this device only. The board, the camera and the Life List all still work. See README.md to switch sharing on.';
+  renderChips();
+  setView('invite');
+}
+
+async function joinByCode(code) {
+  try {
+    const r = await sync.joinGame(code);
+    const g = { ...r.game, unseen: 0, shared: true };
+    if (!g.players.some(p => p.id === S.me.id)) g.players.push({ id: S.me.id, name: S.me.name || 'Player' });
+    await games.put(g);
+    await loadPack(g.packId);
+    S.games.unshift(g); S.gi = 0;
+    await sync.syncGame(g.id);
+    await refresh();
+    setView('board');
+    toast('Joined ' + (pack(g)?.title || 'the game'));
+  } catch (e) {
+    toast(e.message === 'offline' ? 'No sync server, so codes cannot be joined yet.' : 'No game with that code.');
+  }
+}
+
+/* ------------------------------------------------------- life list / you */
+function lifeList() {
+  const seen = new Map();
+  for (const m of S.marks) {
+    if (m.undoneAt || m.playerId !== S.me.id) continue;
+    const g = S.games.find(x => x.id === m.gameId); if (!g) continue;
+    const p = pack(g); if (!p) continue;
+    const it = boardFor(g, S.me.id, p)[m.idx];
+    if (!it?.key) continue;
+    const prev = seen.get(it.key);
+    if (prev) { prev.n++; prev.first = Math.min(prev.first, m.ts); }
+    else seen.set(it.key, { item: it, pack: p, n: 1, first: m.ts, gameId: g.id, idx: m.idx });
+  }
+  return [...seen.values()].sort((a, b) => b.first - a.first);
+}
+
+function renderLife() {
+  const list = lifeList();
+  $('#lifeNum').textContent = list.length;
+  $('#lifeSub').textContent = list.length === 1 ? 'thing found' : 'things found';
+  $('#lifeEmpty').hidden = list.length > 0;
+  const el = $('#lifeGrid'); el.textContent = '';
+  for (const e of list) {
+    const w = document.createElement('div'); w.className = 'lifeitem';
+    const im = document.createElement('div'); im.className = 'im';
+    const mine = S.photos.get(`${e.gameId}:${S.me.id}:${e.idx}`);
+    if (mine) im.style.backgroundImage = `url(${mine.thumbUrl})`;
+    else if (e.item.photo && e.pack.photoDir) im.style.backgroundImage = `url(${e.pack.photoDir}${e.item.photo})`;
+    else im.textContent = e.item.emoji || '◆';
+    const tx = document.createElement('div'); tx.className = 'tx';
+    const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = e.item.label;
+    const dt = document.createElement('div'); dt.className = 'dt';
+    dt.textContent = new Date(e.first).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (e.n > 1 ? ` ×${e.n}` : '');
+    tx.append(nm, dt); w.append(im, tx); el.append(w);
+  }
+}
+
+function renderYou() {
+  $('#nameIn').value = S.me.name || '';
+  const mine = S.marks.filter(m => m.playerId === S.me.id && !m.undoneAt);
+  const wonGames = S.games.filter(g => g.winners?.includes(S.me.id));
+  const rows = [
+    ['Games', S.games.length], ['Won', wonGames.length],
+    ['Squares marked', mine.length], ['On the Life List', lifeList().length],
+    ['Photos taken', S.photos.size],
+  ];
+  $('#stats').innerHTML = rows.map(([k, v]) =>
+    `<div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--hairline)">
+      <span style="color:var(--ink-muted);font-size:13.5px">${k}</span>
+      <span style="font-weight:800;font-variant-numeric:tabular-nums">${v}</span></div>`).join('');
+  $('#aboutNote').textContent =
+    `Springo, prototype build.\n` +
+    `Sync: ${sync.cloudState() === true ? 'on' : sync.cloudState() === false ? 'not deployed, local only' : 'checking'}\n` +
+    `Reference photos: iNaturalist, cc0 / cc-by / cc-by-sa, attributed per square.\n` +
+    `Everything is stored on this device. Nothing leaves it except marks you share.`;
+}
+
+/* ------------------------------------------------- generate + review list */
+const OPEN_LICENCES = new Set(['cc0', 'cc-by', 'cc-by-sa']);
+
+/** iNaturalist, straight from the browser. Research grade and open licences
+ *  only, because a CC BY-NC photo breaks the moment this app charges for
+ *  anything. See docs/08-reference-photos.md. */
+async function resolvePhoto(sci) {
+  const base = 'https://api.inaturalist.org/v1/observations'
+    + '?photo_license=cc0%2Ccc-by%2Ccc-by-sa&quality_grade=research&order_by=votes&per_page=6'
+    + '&taxon_name=' + encodeURIComponent(sci);
+  for (const extra of ['&term_id=12&term_value_id=13', '']) {   // flowering first
+    try {
+      const r = await fetch(base + extra);
+      if (!r.ok) continue;
+      const j = await r.json();
+      for (const o of j.results || []) {
+        for (const ph of o.photos || []) {
+          if (OPEN_LICENCES.has(String(ph.license_code || '').toLowerCase())) {
+            return { url: String(ph.url || '').replace('square', 'medium'),
+                     by: o.user?.login || 'iNaturalist', lic: ph.license_code };
+          }
+        }
+      }
+    } catch { /* offline or blocked: the empty state is honest */ }
+  }
+  return null;
+}
+
+/** Resolve a few at a time so the review screen fills in rather than stalling. */
+async function resolvePhotos(items, onEach) {
+  const queue = items.filter(i => i.sci && !i.photoTried);
+  const workers = Array.from({ length: 4 }, async () => {
+    while (queue.length) {
+      const it = queue.shift();
+      it.photoTried = true;
+      const got = await resolvePhoto(it.sci);
+      if (got) { it.photo = got.url; it.credit = [got.by, got.lic]; }
+      onEach(it);
+    }
+  });
+  await Promise.all(workers);
+}
+
+async function generateList() {
+  const theme = $('#themeIn').value.trim();
+  const region = $('#regionIn').value.trim();
+  if (theme.length < 3) { toast('Give it a few more words.'); return; }
+  const note = $('#genNote'), btn = $('#genBtn');
+  note.hidden = false;
+  note.innerHTML = '<span class="spin"></span> Building a list for "' + theme + '". This takes a few seconds.';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/springo/generate', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ theme, region }),
+    });
+    if (res.status === 503) throw new Error('Theme generation is not switched on for this deployment. The ready-made packs below work offline and need no server.');
+    if (res.status === 429) throw new Error((await res.json()).error || 'Too many new themes today.');
+    if (!res.ok) throw new Error('Generation failed. The ready-made packs still work.');
+    const data = await res.json();
+    if (!data.usable) throw new Error(data.reason || 'That theme will not make a findable board.');
+    if (!data.items?.length) throw new Error('Nothing usable came back.');
+    note.hidden = true;
+    S.review = {
+      theme, region, title: data.title || theme, subtitle: data.subtitle || '',
+      items: data.items.map(i => ({ ...i, keep: true })),
+    };
+    renderReview();
+    setView('review');
+    resolvePhotos(S.review.items, () => renderReview());
+  } catch (e) {
+    note.hidden = false;
+    note.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderReview() {
+  const R = S.review; if (!R) return;
+  $('#revTitle').textContent = R.title;
+  $('#revSub').textContent = R.subtitle;
+  const kept = R.items.filter(i => i.keep).length;
+  const pending = R.items.filter(i => i.sci && !i.photoTried).length;
+  $('#revCount').textContent =
+    `${kept} kept of ${R.items.length}. A board uses 24, drawn with a rarity spread.\n` +
+    (kept < 24 ? `Keep ${24 - kept} more before you can start.\n` : '') +
+    (pending ? `Looking up ${pending} more reference photos.` : '');
+  $('#revNext').textContent = kept < 24 ? `Keep ${24 - kept} more` : `Use these ${kept}`;
+  $('#revNext').disabled = kept < 24;
+
+  const el = $('#revGrid'); el.textContent = '';
+  for (const it of R.items) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'revitem';
+    b.setAttribute('aria-pressed', it.keep ? 'true' : 'false');
+    b.setAttribute('aria-label', `${it.label}, ${it.keep ? 'kept' : 'dropped'}`);
+    const im = document.createElement('span'); im.className = 'im';
+    if (it.photo) im.style.backgroundImage = `url(${it.photo})`;
+    else im.textContent = it.emoji || '◆';
+    const bd = document.createElement('span'); bd.className = 'bd';
+    const t = document.createElement('span'); t.className = 't'; t.textContent = it.label;
+    bd.append(t);
+    if (it.sci) { const sc = document.createElement('span'); sc.className = 'sci'; sc.textContent = it.sci; bd.append(document.createElement('br'), sc); }
+    const h = document.createElement('span'); h.className = 'h'; h.textContent = it.hint || '';
+    bd.append(document.createElement('br'), h);
+    const r = document.createElement('span'); r.className = 'r'; r.textContent = 'r' + it.rarity;
+    b.append(im, bd, r);
+    b.addEventListener('click', () => { it.keep = !it.keep; renderReview(); });
+    el.append(b);
+  }
+}
+
+/** The reviewed list becomes a real pack, stored locally, so the game it makes
+ *  opens offline like any other. */
+async function packFromReview() {
+  const R = S.review;
+  const items = R.items.filter(i => i.keep).map(i => ({
+    key: i.key, label: i.label, sci: i.sci, hint: i.hint, emoji: i.emoji,
+    rarity: i.rarity, photo: i.photo,
+  }));
+  const credits = {};
+  for (const i of R.items) if (i.keep && i.credit) credits[i.key] = i.credit;
+  const p = {
+    id: 'custom-' + uid(), title: R.title, subtitle: R.subtitle,
+    region: R.region || null, season: null, accent: 'beauty',
+    photoDir: '',            // generated items carry absolute photo URLs
+    credits, items, custom: true, theme: R.theme, createdAt: Date.now(),
+  };
+  await packs.put(p);
+  S.packs[p.id] = p;
+  return p;
+}
+
+/* ------------------------------------------------------------------ boot */
+async function refresh() {
+  S.games = (await games.all()).sort((a, b) => b.createdAt - a.createdAt);
+  S.marks = await marks.all();
+  for (const g of S.games) await loadPack(g.packId).catch(() => {});
+  S.queued = await outbox.count();
+  renderAll();
+}
+
+function renderAll() {
+  const g = game();
+  if (g) applyAccent(g.accent);
+  renderChips();
+  if (g) { renderScore(); renderBoard(); $('#screenTitle').textContent = pack(g)?.title || 'Springo'; }
+  if (S.view === 'board' && !g) setView('new');
+}
+
+async function boot() {
+  S.me = await me();
+  for (const id of PACK_IDS) await loadPack(id).catch(e => console.warn('pack', id, e));
+  for (const p of await packs.all()) if (p.custom) S.packs[p.id] = p;
+
+  // restore photos for boards we can paint
+  const all = await games.all();
+  for (const g of all) {
+    for (let i = 0; i < 25; i++) {
+      const rec = await photos.get(`${g.id}:${S.me.id}:${i}`);
+      if (rec) S.photos.set(rec.id, { ...rec, thumbUrl: URL.createObjectURL(rec.thumb) });
+    }
+  }
+  await refresh();
+
+  if (!S.me.name) { setView('you'); toast('Pick a name so other players know who you are.'); }
+  else if (!S.games.length) setView('new');
+  else setView('board');
+
+  sync.probe().then(() => { renderSyncbar(); sync.syncAll().then(n => { if (n) refresh(); }); });
+
+  const join = new URLSearchParams(location.search).get('join');
+  if (join) { $('#joinCode').value = join.toUpperCase(); setView('new'); joinByCode(join); }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+}
+
+/* ----------------------------------------------------------------- events */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  closeSheet();
+  const v = t.dataset.view;
+  if (v === 'board' && !game()) { setView('new'); return; }
+  setView(v);
+}));
+$('#scrim').addEventListener('click', closeSheet);
+$('#shutter').addEventListener('click', fromVideo);
+$('#fileIn').addEventListener('change', e => {
+  const f = e.target.files?.[0]; if (!f) return;
+  const url = URL.createObjectURL(f), im = new Image();
+  im.onload = async () => { URL.revokeObjectURL(url); applyCapture(await processCapture(im, im.naturalWidth, im.naturalHeight, f.size)); };
+  im.onerror = () => { URL.revokeObjectURL(url); toast('That file could not be read as an image.'); };
+  im.src = url; e.target.value = '';
+});
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+  S.setup.mode = b.dataset.mode;
+  document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', x === b));
+}));
+document.querySelectorAll('[data-varied]').forEach(b => b.addEventListener('click', () => {
+  S.setup.varied = b.dataset.varied === '1';
+  document.querySelectorAll('[data-varied]').forEach(x => x.setAttribute('aria-pressed', x === b));
+}));
+$('#createBtn').addEventListener('click', createGame);
+$('#genBtn').addEventListener('click', generateList);
+$('#themeIn')?.addEventListener('keydown', e => { if (e.key === 'Enter') generateList(); });
+$('#revBack').addEventListener('click', () => { S.review = null; setView('new'); });
+$('#revNext').addEventListener('click', async () => {
+  const p = await packFromReview();
+  S.setup = { packId: p.id, mode: 'honor', varied: false };
+  openSetup();
+});
+$('#addItem').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const label = e.target.value.trim();
+  if (!label || !S.review) return;
+  const key = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48)
+            || 'item-' + S.review.items.length;
+  S.review.items.push({ key, label, sci: null, hint: 'Added by you.', emoji: '\u2795', rarity: 3, keep: true });
+  e.target.value = '';
+  renderReview();
+});
+$('#cancelSetup').addEventListener('click', () => setView('new'));
+$('#toBoardBtn').addEventListener('click', () => setView('board'));
+$('#shareBtn').addEventListener('click', async () => {
+  const g = game(); if (!g) return;
+  const url = location.origin + location.pathname + '?join=' + g.code;
+  const data = { title: 'Springo', text: `Play ${pack(g)?.title} with me. Code ${g.code}.`, url };
+  try {
+    if (navigator.share) await navigator.share(data);
+    else { await navigator.clipboard.writeText(url); toast('Link copied.'); }
+  } catch {}
+});
+$('#joinBtn').addEventListener('click', () => {
+  const c = $('#joinCode').value.trim().toUpperCase();
+  if (c.length === 6) joinByCode(c); else toast('A code is six characters.');
+});
+$('#saveName').addEventListener('click', async () => {
+  const n = $('#nameIn').value.trim();
+  if (!n) { toast('Names help when two boards look alike.'); return; }
+  S.me = await setName(n);
+  for (const g of S.games) {
+    const p = g.players.find(x => x.id === S.me.id);
+    if (p && p.name !== S.me.name) { p.name = S.me.name; await games.put(g); }
+  }
+  toast('Saved.');
+  renderAll();
+  if (!S.games.length) setView('new');
+});
+$('#syncBtn').addEventListener('click', async () => {
+  const n = await sync.syncAll();
+  S.queued = await outbox.count();
+  if (n) { await refresh(); toast(n + ' new mark' + (n === 1 ? '' : 's')); }
+  else toast(sync.cloudState() === false ? 'No sync server deployed.' : 'Up to date.');
+});
+addEventListener('online', () => sync.syncAll().then(n => { if (n) refresh(); else renderSyncbar(); }));
+addEventListener('visibilitychange', () => { if (!document.hidden) sync.syncAll().then(n => { if (n) refresh(); }); });
+
+boot();

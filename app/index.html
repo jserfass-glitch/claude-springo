@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Springo</title>
+<meta name="description" content="Real-world bingo. Pick a theme, mark a square when you see the thing outside.">
+<meta name="theme-color" content="#FBF7F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141210" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Springo">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app">
+
+  <header class="top">
+    <div class="titlerow">
+      <h1 id="screenTitle">Springo</h1>
+      <button class="iconbtn" type="button" id="syncBtn" aria-label="Sync now">&#8635;</button>
+    </div>
+    <div class="chips" id="chips" role="tablist" aria-label="Your games"></div>
+  </header>
+
+  <main>
+    <!-- board -->
+    <section class="boardview on" id="viewBoard">
+      <div class="scorerow" id="scorerow"></div>
+      <div class="boardwrap" id="boardwrap">
+        <div class="viewing" id="viewing"></div>
+        <div class="board" id="board" role="grid" aria-label="Bingo board"></div>
+      </div>
+      <div class="syncbar" id="syncbar"></div>
+    </section>
+
+    <!-- empty state / new game -->
+    <section class="view" id="viewNew">
+      <h2 class="sec">Start a game</h2>
+      <p class="lede">Type a theme and Springo proposes a list, or pick a ready-made pack.
+      Everyone gets a board drawn from it, and you mark a square when you see the real thing
+      outside. There is no timer. A game runs as long as it takes.</p>
+
+      <label class="f" for="themeIn">Your own theme</label>
+      <input type="text" id="themeIn" maxlength="80" autocomplete="off"
+             placeholder="Arkansas spring ephemerals">
+      <label class="f" for="regionIn">Where, so the list fits the ground</label>
+      <input type="text" id="regionIn" maxlength="60" autocomplete="off"
+             placeholder="Ozarks, northwest Arkansas">
+      <div class="row"><button class="btn" type="button" id="genBtn">Build me a list</button></div>
+      <div class="note" id="genNote" hidden></div>
+
+      <h2 class="sec">Ready-made</h2>
+      <div id="packList"></div>
+      <h2 class="sec">Or join one</h2>
+      <label class="f" for="joinCode">Game code</label>
+      <input type="text" id="joinCode" class="code" maxlength="6" placeholder="......"
+             autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <div class="row"><button class="btn ghost" type="button" id="joinBtn">Join</button></div>
+    </section>
+
+    <!-- review the generated list: the quality gate for the whole product -->
+    <section class="view" id="viewReview">
+      <h2 class="sec" id="revTitle">Review the list</h2>
+      <p class="lede" id="revSub"></p>
+      <div class="note" id="revCount"></div>
+      <div class="revgrid" id="revGrid"></div>
+      <label class="f" for="addItem">Add something the list missed</label>
+      <input type="text" id="addItem" maxlength="48" autocomplete="off" placeholder="Whatever you know is out there">
+      <div class="row">
+        <button class="btn" type="button" id="revNext">Use these</button>
+        <button class="btn ghost" type="button" id="revBack">Start over</button>
+      </div>
+    </section>
+
+    <!-- game setup -->
+    <section class="view" id="viewSetup">
+      <h2 class="sec" id="setupTitle">New game</h2>
+      <label class="f">How do you mark a square</label>
+      <div class="opts">
+        <button class="opt" type="button" data-mode="honor" aria-pressed="true">
+          <span class="t">Honor</span><span class="s">Tap and it is marked. Works while you are holding binoculars in the rain.</span></button>
+        <button class="opt" type="button" data-mode="photo" aria-pressed="false">
+          <span class="t">Photo</span><span class="s">Take a picture of it. The mark lands when the shutter fires, not when it uploads.</span></button>
+      </div>
+      <label class="f">Boards</label>
+      <div class="opts">
+        <button class="opt" type="button" data-varied="0" aria-pressed="true">
+          <span class="t">Same items</span><span class="s">Everyone hunts the same 24, laid out differently. A real race.</span></button>
+        <button class="opt" type="button" data-varied="1" aria-pressed="false">
+          <span class="t">Varied</span><span class="s">Different items each. Better when players are far apart. Needs a pack over 24.</span></button>
+      </div>
+      <div class="note" id="setupNote"></div>
+      <div class="row">
+        <button class="btn" type="button" id="createBtn">Create game</button>
+        <button class="btn ghost" type="button" id="cancelSetup">Back</button>
+      </div>
+    </section>
+
+    <!-- invite -->
+    <section class="view" id="viewInvite">
+      <h2 class="sec">Invite</h2>
+      <p class="lede">Send this code to whoever is playing. They open Springo and type it in.</p>
+      <div class="codebox" id="inviteCode">------</div>
+      <div class="row">
+        <button class="btn" type="button" id="shareBtn">Share the link</button>
+        <button class="btn ghost" type="button" id="toBoardBtn">Go to the board</button>
+      </div>
+      <div class="note" id="inviteNote"></div>
+    </section>
+
+    <!-- life list -->
+    <section class="view" id="viewLife">
+      <div class="lifehead"><span class="lifenum" id="lifeNum">0</span>
+        <span class="lede" style="margin:0" id="lifeSub">things found</span></div>
+      <div class="lifegrid" id="lifeGrid"></div>
+      <p class="lede" id="lifeEmpty" hidden>Nothing yet. Every square you mark lands here and stays,
+      with your photo and the date, after the game that produced it is long gone.</p>
+    </section>
+
+    <!-- you -->
+    <section class="view" id="viewYou">
+      <h2 class="sec">You</h2>
+      <label class="f" for="nameIn">Your name</label>
+      <input type="text" id="nameIn" maxlength="24" placeholder="What should other players see"
+             autocomplete="nickname">
+      <div class="row"><button class="btn ghost" type="button" id="saveName">Save</button></div>
+      <h2 class="sec">Stats</h2>
+      <div id="stats"></div>
+      <div class="note" id="aboutNote"></div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab" type="button" data-view="board" aria-selected="true"><span class="ti">&#9635;</span>Games</button>
+    <button class="tab" type="button" data-view="new" aria-selected="false"><span class="ti">&#43;</span>New</button>
+    <button class="tab" type="button" data-view="life" aria-selected="false"><span class="ti">&#9634;</span>List</button>
+    <button class="tab" type="button" data-view="you" aria-selected="false"><span class="ti">&#9679;</span>You</button>
+  </nav>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shName">
+  <div class="grab"></div>
+  <h3 id="shName">Square</h3>
+  <p class="sci" id="shSci"></p>
+  <p class="hint" id="shHint"></p>
+  <div class="finder" id="finder">
+    <video id="vid" playsinline muted></video>
+    <button class="shutter" type="button" id="shutter" aria-label="Take photo"></button>
+  </div>
+  <p class="pipe" id="pipe" hidden></p>
+  <div class="pair">
+    <div class="pane"><span class="cap">Reference</span>
+      <span class="frame" id="refFrame"></span><span class="credit" id="refCredit"></span></div>
+    <div class="pane"><span class="cap" id="myCap">Your photo</span>
+      <span class="frame" id="myFrame"></span><span class="credit" id="myCredit"></span></div>
+  </div>
+  <div class="row" id="shRow"></div>
+</div>
+
+<input type="file" id="fileIn" accept="image/*" capture="environment">
+<canvas id="petals"></canvas>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

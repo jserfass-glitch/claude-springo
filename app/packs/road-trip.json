@@ -1,0 +1,187 @@
+{
+"id": "road-trip",
+"title": "Road Trip",
+"subtitle": "Anywhere with a highway and a windshield",
+"region": null,
+"season": "any",
+"accent": "bluebell",
+"photoDir": null,
+"credits": {},
+"items": [
+{
+"key": "water-tower",
+"label": "Water tower",
+"hint": "Town name on the tank",
+"emoji": "🗼",
+"rarity": 1
+},
+{
+"key": "hay-bale",
+"label": "Hay bale",
+"hint": "Round or square, both count",
+"emoji": "🌾",
+"rarity": 1
+},
+{
+"key": "grain-silo",
+"label": "Grain silo",
+"hint": "",
+"emoji": "🏗",
+"rarity": 1
+},
+{
+"key": "hawk-on-a-wire",
+"label": "Hawk on a wire",
+"hint": "Red-tailed, usually",
+"emoji": "🦅",
+"rarity": 2
+},
+{
+"key": "barn-quilt",
+"label": "Barn quilt",
+"hint": "Painted square on a barn face",
+"emoji": "🎨",
+"rarity": 3
+},
+{
+"key": "armadillo",
+"label": "Armadillo",
+"hint": "Alive counts double",
+"emoji": "🦔",
+"rarity": 2
+},
+{
+"key": "church-steeple",
+"label": "Church steeple",
+"hint": "",
+"emoji": "⛪",
+"rarity": 1
+},
+{
+"key": "cattle-in-shade",
+"label": "Cattle in shade",
+"hint": "",
+"emoji": "🐄",
+"rarity": 1
+},
+{
+"key": "fireworks-stand",
+"label": "Fireworks stand",
+"hint": "",
+"emoji": "🎆",
+"rarity": 3
+},
+{
+"key": "vanity-plate",
+"label": "Vanity plate",
+"hint": "Has to be readable",
+"emoji": "🚗",
+"rarity": 2
+},
+{
+"key": "tractor-crossing",
+"label": "Tractor on the road",
+"hint": "",
+"emoji": "🚜",
+"rarity": 2
+},
+{
+"key": "kudzu",
+"label": "Kudzu",
+"hint": "Swallowing something it should not",
+"emoji": "🌿",
+"rarity": 2
+},
+{
+"key": null,
+"label": "FREE",
+"hint": "Free space",
+"emoji": "★",
+"rarity": 1
+},
+{
+"key": "rusted-pickup",
+"label": "Rusted pickup",
+"hint": "Parked, not driven, for some years",
+"emoji": "🛻",
+"rarity": 1
+},
+{
+"key": "gazebo",
+"label": "Town square gazebo",
+"hint": "",
+"emoji": "🏛",
+"rarity": 3
+},
+{
+"key": "dairy-queen",
+"label": "Dairy Queen",
+"hint": "",
+"emoji": "🍦",
+"rarity": 2
+},
+{
+"key": "crop-duster",
+"label": "Crop duster",
+"hint": "Flying, not parked",
+"emoji": "✈",
+"rarity": 4
+},
+{
+"key": "river-bridge",
+"label": "River bridge",
+"hint": "",
+"emoji": "🌉",
+"rarity": 1
+},
+{
+"key": "turkey-vulture",
+"label": "Turkey vulture",
+"hint": "Wings in a shallow V, rocking",
+"emoji": "🦃",
+"rarity": 1
+},
+{
+"key": "antique-mall",
+"label": "Antique mall",
+"hint": "",
+"emoji": "🕰",
+"rarity": 2
+},
+{
+"key": "grain-elevator",
+"label": "Grain elevator",
+"hint": "",
+"emoji": "🏭",
+"rarity": 2
+},
+{
+"key": "now-hiring",
+"label": "Now Hiring sign",
+"hint": "",
+"emoji": "📋",
+"rarity": 1
+},
+{
+"key": "ditch-wildflowers",
+"label": "Ditch wildflowers",
+"hint": "A real stand of them, not three stems",
+"emoji": "💐",
+"rarity": 1
+},
+{
+"key": "deer-crossing",
+"label": "Deer crossing sign",
+"hint": "",
+"emoji": "🦌",
+"rarity": 1
+},
+{
+"key": "combine",
+"label": "Combine harvester",
+"hint": "In a field, working",
+"emoji": "🚜",
+"rarity": 3
+}
+]
+}
