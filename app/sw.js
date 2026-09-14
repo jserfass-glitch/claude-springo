@@ -1,11 +1,12 @@
 // Springo service worker. The whole point of this file is cold-start offline:
 // opening the app in a hollow with no signal has to work, not just keeping it
 // open while signal drops.
-const VERSION = 'springo-v2';
+const VERSION = 'springo-v3';
 const SHELL = [
   './', './index.html', './app.css', './app.js', './game.js', './store.js', './sync.js',
   './manifest.webmanifest', './icon-192.png', './icon-512.png',
   './packs/ozark-fall.json', './packs/ozark-spring.json', './packs/road-trip.json',
+  './packs/cozy-mystery.json',
 ];
 
 self.addEventListener('install', e => {

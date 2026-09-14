@@ -22,6 +22,9 @@
   --shadow:0 2px 14px rgba(0,0,0,.5); --lift:0 10px 40px rgba(0,0,0,.62);
 }
 *{box-sizing:border-box}
+/* a class that sets display beats the browser's [hidden] rule, so el.hidden
+   silently does nothing on .pair, .opts and friends unless this is here */
+[hidden]{display:none !important}
 html,body{height:100%}
 body{
   margin:0;background:var(--ground);color:var(--ink);

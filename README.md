@@ -35,7 +35,7 @@ this build does not do yet.
 | [`docs/`](docs/) | The design, argued out. Read these before changing behaviour |
 | [`prototype/`](prototype/) | The design prototype, with a live telemetry rail. Superseded by `app/` but useful for explaining the motion and colour decisions |
 | [`netlify/functions/`](netlify/functions/) | Sync, and theme generation on the Claude API |
-| [`tools/`](tools/) | The difficulty simulation and the reference-photo fetcher |
+| [`tools/`](tools/) | The difficulty simulations and the reference-photo fetcher |
 
 ## Documents
 
@@ -49,6 +49,7 @@ this build does not do yet.
 | [`docs/06-data-model.md`](docs/06-data-model.md) | Postgres schema, RLS sketch, win detection code |
 | [`docs/07-roadmap.md`](docs/07-roadmap.md) | v1 scope, build order, cost model, open questions |
 | [`docs/08-reference-photos.md`](docs/08-reference-photos.md) | Sourcing species photos from the internet, what it costs, what it misses |
+| [`docs/09-screen-mode.md`](docs/09-screen-mode.md) | Playing against a TV show, a film or a live event. Why nearly every outdoor default inverts, and where the intellectual property line actually is |
 | [`prototype/index.html`](prototype/index.html) | Interactive prototype. Tap squares, take a real photo in photo mode, watch the win animation |
 
 ## The seven decisions that matter

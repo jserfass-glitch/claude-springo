@@ -19,7 +19,11 @@ const ACCENTS = {
   trillium: { fill: '#C0453E', ink: '#FFFFFF', deep: '#A63530', soft: '#DE7C76' },
 };
 const ACCENT_KEYS = Object.keys(ACCENTS);
-const PACK_IDS = ['ozark-fall', 'ozark-spring', 'road-trip'];
+const PACK_IDS = ['ozark-fall', 'ozark-spring', 'road-trip', 'cozy-mystery'];
+
+/** A screen pack plays against a TV, a film or a live event instead of the
+ *  outdoors, and nearly every default flips. See docs/09-screen-mode.md. */
+const isScreen = p => p?.kind === 'screen';
 
 const S = {
   me: null, games: [], marks: [], packs: {}, photos: new Map(),
@@ -248,16 +252,20 @@ function onCellDown(e) {
     press.fired = true;
     cell.classList.remove('holding');
     if (navigator.vibrate) { try { navigator.vibrate([12, 40, 18]); } catch {} }
-    quickAct(idx, cell);
+    if (isScreen(pack(g))) openSheet(idx); else quickAct(idx, cell);
   }, HOLD_MS);
 }
 
 function onCellUp(e) {
   if (!press) return;
-  const { idx, fired } = press;
+  const { idx, fired, cell } = press;
   clearPress();
   if (fired) return;                       // the hold already did the work
-  openSheet(idx);
+  // Outdoors a tap opens the square, because the reference photo is the reason
+  // to open one you have not marked. On a screen there is no reference photo
+  // and the player is trying to watch television, so a tap marks.
+  if (isScreen(pack(game())) && canQuickAct(idx)) quickAct(idx, cell);
+  else openSheet(idx);
 }
 
 function onCellMove(e) {
@@ -515,13 +523,16 @@ function openSheet(idx) {
   const theirs = viewing !== S.me.id;
   const set = new Set(marksOf(g, viewing).map(m => m.idx));
 
+  const screenPack = isScreen(p);
+
   $('#shName').textContent = it.label;
   $('#shSci').textContent = it.sci || '';
   $('#shHint').textContent = it.hint || 'No identification hint on this pack item.';
 
   const rf = $('#refFrame'), rc = $('#refCredit'); rf.textContent = ''; rc.textContent = '';
   rf.classList.toggle('none', !(it.photo && p.photoDir));
-  if (it.photo && p.photoDir) {
+  if (screenPack) { /* no panes */ }
+  else if (it.photo && p.photoDir) {
     const im = new Image(); im.src = p.photoDir + it.photo; im.alt = 'Reference photo of ' + it.label;
     im.onerror = () => {
       rf.classList.add('none');
@@ -534,9 +545,10 @@ function openSheet(idx) {
     rf.innerHTML = '<span class="empty">No open-licence photo. Not every item is a species.</span>';
   }
 
-  // in honor mode there is never a photo of your own; give the reference the
-  // whole width rather than parking an empty pane next to it
-  $('#sheetPair').classList.toggle('solo', g.mode !== 'photo');
+  // a screen pack has neither a reference photo nor one of your own; the
+  // "what counts" line is the whole content
+  $('#sheetPair').hidden = screenPack;
+  $('#sheetPair').classList.toggle('solo', !screenPack && g.mode !== 'photo');
 
   const mf = $('#myFrame'), mc = $('#myCredit'); mf.textContent = ''; mc.textContent = '';
   $('#myCap').textContent = theirs ? (g.players.find(x => x.id === viewing)?.name || 'Their') + "'s photo" : 'Your photo';
@@ -554,9 +566,11 @@ function openSheet(idx) {
   meta.get('heldHint').then(seen => {
     if (seen || theirs) return;
     meta.set('heldHint', 1);
-    setTimeout(() => toast(g.mode === 'photo'
-      ? 'Tip: hold a square to go straight to the camera.'
-      : 'Tip: hold a square to mark it without opening this.', 4200), 900);
+    setTimeout(() => toast(isScreen(pack(g))
+      ? 'Tip: tap a square to mark it. Hold one to read what counts.'
+      : g.mode === 'photo'
+        ? 'Tip: hold a square to go straight to the camera.'
+        : 'Tip: hold a square to mark it without opening this.', 4200), 900);
   });
   if (!theirs && !set.has(idx) && g.mode === 'photo' && !g.winners?.length) {
     startCamera().then(ok => {
@@ -594,16 +608,26 @@ function renderPackList() {
 function openSetup() {
   const p = S.packs[S.setup.packId];
   if (!p) { setView('new'); return; }
+  const screenPack = isScreen(p);
+  if (screenPack) { S.setup.mode = 'honor'; S.setup.varied = true; }
   $('#setupTitle').textContent = p.title;
+  // photographing a television proves nothing, so photo mode is not offered
+  $('#modeRow').hidden = screenPack;
+  $('#modeLabel').hidden = screenPack;
   document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === S.setup.mode));
   document.querySelectorAll('[data-varied]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.varied === '1') === S.setup.varied));
   const real = p.items.filter(i => i.key).length;
   const withPhoto = p.items.filter(i => i.photo).length;
-  $('#setupNote').textContent =
-    `${real} items, ${withPhoto} with a reference photo.\n` +
-    `Typical bingo: 13 marks, usually 11 to 16.\n` +
-    (real <= 24 ? 'This pack is exactly 24 items, so varied boards fall back to same items.'
-                : `Varied boards can draw different items for each player from these ${real}.`);
+  $('#setupNote').textContent = screenPack
+    ? `${real} items. Runtime about ${p.runtime || 45} minutes.\n` +
+      `A win usually lands around the ${Math.round((p.runtime || 45) * 0.38)} minute mark, ` +
+      `and nearly always lands before the credits.\n` +
+      `Varied boards are forced on: the trope fires once for the whole room, so ` +
+      `identical boards would have everyone marking the same square at the same second.`
+    : `${real} items, ${withPhoto} with a reference photo.\n` +
+      `Typical bingo: 13 marks, usually 11 to 16.\n` +
+      (real <= 24 ? 'This pack is exactly 24 items, so varied boards fall back to same items.'
+                  : `Varied boards can draw different items for each player from these ${real}.`);
   setView('setup');
 }
 

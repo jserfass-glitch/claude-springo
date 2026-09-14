@@ -49,6 +49,19 @@ skips the sheet: honor mode marks, photo mode opens the camera. Never make a
 short tap mark straight from the board face, and never make an action reachable
 ONLY by holding, since a keyboard user cannot hold.
 
+**A screen pack (`kind: "screen"`) inverts most defaults.** Varied boards
+forced on, no photo mode, no reference photo, and a tap marks while a hold opens
+the detail. The reasoning is in `docs/09-screen-mode.md`; the short version is
+that a trope fires once for the whole room, so identical boards would have
+everyone marking the same square at the same second.
+
+**Never bundle a pack named after a show.** Genres are not owned; titles are, and
+app stores reject on their own policy long before a fair-use argument gets
+heard. Show-specific boards come from the user typing a name and generating one.
+
+**`el.hidden` needs the `[hidden]{display:none !important}` rule** in `app.css`,
+because any class that sets `display` silently beats the browser's own rule.
+
 **No em dashes** anywhere in prose or source.
 
 ## Running it
