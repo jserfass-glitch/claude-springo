@@ -1,7 +1,7 @@
 // Springo service worker. The whole point of this file is cold-start offline:
 // opening the app in a hollow with no signal has to work, not just keeping it
 // open while signal drops.
-const VERSION = 'springo-v1';
+const VERSION = 'springo-v2';
 const SHELL = [
   './', './index.html', './app.css', './app.js', './game.js', './store.js', './sync.js',
   './manifest.webmanifest', './icon-192.png', './icon-512.png',
@@ -21,6 +21,34 @@ self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     for (const k of await caches.keys()) if (k !== VERSION) await caches.delete(k);
     await self.clients.claim();
+  })());
+});
+
+// Warm a pack's reference photos on request. Without this, the detail sheet
+// only has a reference for squares you already opened while online, which is
+// backwards: the moment you want to check what a Hen of the Woods looks like
+// is the moment you are standing in front of one with no bars.
+self.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || d.type !== 'warm' || !Array.isArray(d.urls)) return;
+  e.waitUntil((async () => {
+    const c = await caches.open(VERSION);
+    let stored = 0, already = 0;
+    for (const u of d.urls.slice(0, 200)) {
+      try {
+        if (await c.match(u)) { already++; continue; }
+        let r = await fetch(u).catch(() => null);
+        // generated packs point at iNaturalist, which may not send CORS on the
+        // image host; an opaque response still caches and still renders
+        if (!r || !r.ok) r = await fetch(u, { mode: 'no-cors' }).catch(() => null);
+        if (!r) continue;
+        await c.put(u, r);
+        stored++;
+      } catch { /* one missing photo is not worth failing the batch */ }
+    }
+    for (const client of await self.clients.matchAll()) {
+      client.postMessage({ type: 'warmed', stored, already, total: d.urls.length });
+    }
   })());
 });
 

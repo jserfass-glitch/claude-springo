@@ -534,6 +534,7 @@ async function createGame() {
   S.games.unshift(g); S.gi = 0;
   const ok = await sync.pushGame(g);
   if (ok) { g.shared = true; await games.put(g); }
+  warmPackPhotos(p);
   $('#inviteCode').textContent = g.code;
   $('#inviteNote').textContent = ok
     ? 'Anyone with this code joins and sees your board. Marks sync whenever either of you has signal.'
@@ -548,7 +549,8 @@ async function joinByCode(code) {
     const g = { ...r.game, unseen: 0, shared: true };
     if (!g.players.some(p => p.id === S.me.id)) g.players.push({ id: S.me.id, name: S.me.name || 'Player' });
     await games.put(g);
-    await loadPack(g.packId);
+    const jp = await loadPack(g.packId);
+    warmPackPhotos(jp);
     S.games.unshift(g); S.gi = 0;
     await sync.syncGame(g.id);
     await refresh();
@@ -749,6 +751,26 @@ async function packFromReview() {
   S.packs[p.id] = p;
   return p;
 }
+
+/** Ask the service worker to download a pack's reference photos now, so they
+ *  are there when there is no signal. Best effort and silent on failure. */
+async function warmPackPhotos(p) {
+  if (!p || !p.photoDir || !('serviceWorker' in navigator)) return;
+  const urls = p.items.filter(i => i.photo)
+    .map(i => new URL(p.photoDir + i.photo, location.href).href);
+  if (!urls.length) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    (reg.active || navigator.serviceWorker.controller)?.postMessage({ type: 'warm', urls });
+  } catch { /* no service worker: the sheet's empty state is honest */ }
+}
+
+navigator.serviceWorker?.addEventListener('message', e => {
+  const d = e.data;
+  if (d?.type === 'warmed' && d.stored) {
+    toast(`${d.stored} reference photo${d.stored === 1 ? '' : 's'} saved for offline.`);
+  }
+});
 
 /* ------------------------------------------------------------------ boot */
 async function refresh() {

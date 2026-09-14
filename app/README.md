@@ -31,8 +31,12 @@ Everything except seeing another person's marks:
 - photo mode, real capture, the resize and compression pipeline, EXIF stripping
 - reference photos and their attribution
 - the Life List, stats, multiple games at once
-- **cold-start offline**: the service worker caches the shell, the packs and
-  the reference photos, so opening the app in a hollow with no bars works
+- **cold-start offline**: the service worker caches the shell and the packs, so
+  opening the app in a hollow with no bars works
+- **reference photos are downloaded when a game is created**, not when you first
+  open a square. Otherwise the one moment you want to check what a Hen of the
+  Woods looks like, standing in front of one with no bars, is the moment you
+  have no photo
 
 Games created with no server are marked `SOLO` and stay on the device.
 
