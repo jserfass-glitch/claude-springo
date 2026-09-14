@@ -57,6 +57,10 @@ Reference photos for generated items are looked up in the browser against
 iNaturalist, research grade, filtered to cc0 / cc-by / cc-by-sa, with the
 observer and licence shown under the photo.
 
+A theme the generator classifies as a screen board (a series, a genre, a film, a
+live event) skips all of that. There is nothing to photograph, so no lookup runs
+and the hint line does the work a reference photo would have done outdoors.
+
 Needs `ANTHROPIC_API_KEY` set on the Netlify site. Without it the endpoint
 returns 503 and the app says so, and the ready-made packs keep working with no
 server at all.

@@ -249,3 +249,6 @@ input[type=text].code{text-transform:uppercase;letter-spacing:.24em;font-family:
 .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--hairline);
   border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* a screen board has no photo to show, so the tile is just the emoji */
+.revitem .im.noimg{width:34px;height:34px;background:transparent;font-size:22px}

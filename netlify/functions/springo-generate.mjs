@@ -19,23 +19,38 @@ const POOL = 36;
 
 const Item = z.object({
   label: z.string().describe('Short name a player reads on a square, 1 to 4 words'),
-  sci: z.string().nullable().describe('Scientific name if this is a real species, otherwise null'),
-  hint: z.string().describe('One line telling a non-expert how to recognise it in the field'),
+  sci: z.string().nullable()
+    .describe('Scientific name if this is a real living species. Null for everything else, and ALWAYS null on a screen board'),
+  hint: z.string().describe('One line telling a non-expert what counts, so two players agree'),
   emoji: z.string().describe('A single emoji'),
-  rarity: z.number().int().min(1).max(5).describe('1 you will see it today, 5 a good year'),
+  rarity: z.number().int().min(1).max(5)
+    .describe('Outdoor: 1 you will see it today, 5 a good year. Screen: 1 several times an episode, 5 once in a season'),
 });
 const Result = z.object({
-  usable: z.boolean().describe('False if the theme cannot be turned into a safe, findable board'),
+  usable: z.boolean().describe('False if the theme cannot be turned into a safe, playable board'),
   reason: z.string().nullable().describe('If not usable, one sentence a player would understand'),
+  kind: z.enum(['outdoor', 'screen'])
+    .describe('outdoor = found by going outside. screen = watched on a TV, film or live event'),
+  runtime: z.number().int().nullable()
+    .describe('Screen boards only: minutes in one sitting, e.g. 22, 45, 100. Null for outdoor'),
   title: z.string().describe('A short name for this pack, 2 to 4 words'),
   subtitle: z.string().describe('One short line: what and where and when'),
   items: z.array(Item),
 });
 
-const SYSTEM = `You build item lists for Springo, a bingo game played by walking
-around outdoors and marking a square when you see the real thing.
+const SYSTEM = `You build item lists for Springo, a bingo game where players mark
+a square when they see the thing it names.
 
-Rules for every item:
+FIRST decide which kind of board the theme wants, and set "kind".
+
+"outdoor" means the player finds it by going outside: plants, birds, fungi,
+roadside things, weather, a town. This is the default when in doubt.
+
+"screen" means the player watches for it on a television, in a film, or during a
+live event: a series, a genre of series, a film, an awards show, a match, a
+broadcast. Set "runtime" to how long one sitting is.
+
+RULES FOR AN OUTDOOR BOARD, every item:
 - Observable in public, from a path or a roadside. Never anything requiring
   trespassing, digging, climbing, picking, handling, or approaching an animal.
 - Recognisable by a non-expert given only your hint. "Spring Beauty" works.
@@ -53,9 +68,31 @@ Rules for every item:
 - Items that are not living things (a water tower, a barn quilt) are fine and
   take sci: null.
 
-Set usable: false for a theme that cannot produce a safe findable board: things
-that are not observable in public, anything targeting a person, anything that
-would put a player in danger, or a theme too vague to produce distinct items.`;
+RULES FOR A SCREEN BOARD, every item:
+- ALWAYS set sci: null. There are no species on a screen board and nothing will
+  be looked up, so a scientific name is only a chance to be wrong.
+- Write RECURRING PATTERNS, never specific moments. "A relative of the detective
+  is a suspect" is a pattern that comes round again. "The scene where Grady
+  spills the coffee" is one moment, it is the thing you are most likely to be
+  wrong about, and it makes an unwinnable square.
+- Write for the SERIES or the GENRE, never one episode. If the theme names a
+  single episode, generate for its series instead and say so in the subtitle.
+- Prefer things two people in a room would agree happened. "The body is found"
+  settles itself. "The tension builds" does not. Some judgment calls are fine
+  and make the game, but most items should settle themselves.
+- The hint says what COUNTS, because it is the only thing standing between two
+  players and an argument. There is no photograph to check against.
+- Aim the rarity spread at roughly 6 items at 1, 6 at 2, 8 at 3, 3 at 4 and 1 at
+  5, so a win lands a little past the midpoint of the runtime and nearly always
+  lands before the end. A board of common things is over in the first ten
+  minutes; a board of rare ones ends with nobody winning, which is worse.
+- Never write an instruction to drink, or anything that only makes sense as a
+  drinking game. Players are 13 and up.
+
+Set usable: false for a theme that cannot produce a safe playable board: an
+outdoor theme that is not observable in public, anything targeting a private
+person, anything that would put a player in danger, or a theme too vague to
+produce distinct items.`;
 
 const norm = s => String(s || '').toLowerCase().trim().replace(/\s+/g, ' ').slice(0, 120);
 
@@ -100,7 +137,7 @@ export default async (req) => {
       messages: [{
         role: 'user',
         content: `Theme: ${body.theme}\n` +
-          (region ? `Region: ${body.region}\n` : '') +
+          (region ? `Region or show: ${body.region}\n` : '') +
           (season ? `Season: ${body.season}\n` : '') +
           `Propose ${POOL} items. The player will review and cut this to 24.`,
       }],
@@ -125,7 +162,14 @@ export default async (req) => {
     return { key, label: it.label, sci: it.sci || undefined, hint: it.hint, emoji: it.emoji, rarity: it.rarity };
   });
 
-  const payload = { usable: parsed.usable, reason: parsed.reason, title: parsed.title, subtitle: parsed.subtitle, items };
+  const screen = parsed.kind === 'screen';
+  const payload = {
+    usable: parsed.usable, reason: parsed.reason,
+    kind: parsed.kind, runtime: screen ? (parsed.runtime || 45) : null,
+    title: parsed.title, subtitle: parsed.subtitle,
+    // a screen item has nothing to look up, so never let a stray name through
+    items: screen ? items.map(({ sci, ...rest }) => rest) : items,
+  };
   if (parsed.usable && items.length >= 24) {
     await store.setJSON(cacheKey, payload).catch(() => {});
   }

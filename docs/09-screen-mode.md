@@ -252,6 +252,22 @@ mode, for three reasons:
 
 Two constraints still matter, and they replace the regional-accuracy one:
 
+The generator classifies the theme itself, returning `kind: "outdoor" | "screen"`
+alongside the items, and the two kinds get different rules. A screen theme is
+forced to `sci: null` on every item and the scientific name is stripped server
+side even if one slips through, because **there is nothing to look up**. No
+iNaturalist call is made, no licence filter runs, no photo is cached, and the
+review screen says so instead of showing empty tiles. The whole reference-photo
+apparatus in [08-reference-photos.md](08-reference-photos.md), which is the most
+expensive and least reliable part of the outdoor pipeline, simply does not exist
+here. That is a real simplification, not just a skipped feature.
+
+What replaces it is the hint line. Outdoors a hint helps you identify a plant and
+a photograph settles it. On a screen the hint is the *only* thing standing
+between two players and an argument, so it has to say what counts rather than
+what the thing is: "the body is found, on screen or reported, first discovery
+only".
+
 **Tropes, not events.** "The scene where Grady spills coffee" is a hallucination
 risk and an unwinnable square. "A relative of the detective is a suspect" is a
 pattern that recurs. Generate patterns.
@@ -315,7 +331,7 @@ Smaller than it looks, because most of it is defaults:
 | Timestamps | Relative to session start, not wall clock |
 | Session | An elapsed timer, and an end when the runtime does |
 | Offline | Irrelevant. Do not remove it, just stop advertising it |
-| Life List | Does not apply. A collection of tropes is not a record of anything |
+| Life List | Excluded. A collection of tropes is not a record of anything, so screen marks never enter it |
 | Live sync | Actually matters here, unlike outdoors. Everyone should see marks land |
 
 **One interaction changes, and it is worth stating on its own.** Outdoors, a tap

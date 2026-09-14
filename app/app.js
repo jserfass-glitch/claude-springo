@@ -697,7 +697,7 @@ function lifeList() {
   for (const m of S.marks) {
     if (m.undoneAt || m.playerId !== S.me.id) continue;
     const g = S.games.find(x => x.id === m.gameId); if (!g) continue;
-    const p = pack(g); if (!p) continue;
+    const p = pack(g); if (!p || isScreen(p)) continue;   // see docs/09-screen-mode.md
     const it = boardFor(g, S.me.id, p)[m.idx];
     if (!it?.key) continue;
     const prev = seen.get(it.key);
@@ -813,11 +813,13 @@ async function generateList() {
     note.hidden = true;
     S.review = {
       theme, region, title: data.title || theme, subtitle: data.subtitle || '',
+      kind: data.kind === 'screen' ? 'screen' : 'outdoor', runtime: data.runtime || null,
       items: data.items.map(i => ({ ...i, keep: true })),
     };
     renderReview();
     setView('review');
-    resolvePhotos(S.review.items, () => renderReview());
+    // nothing on a screen board has a reference photo to find
+    if (S.review.kind !== 'screen') resolvePhotos(S.review.items, () => renderReview());
   } catch (e) {
     note.hidden = false;
     note.textContent = e.message;
@@ -831,11 +833,14 @@ function renderReview() {
   $('#revTitle').textContent = R.title;
   $('#revSub').textContent = R.subtitle;
   const kept = R.items.filter(i => i.keep).length;
-  const pending = R.items.filter(i => i.sci && !i.photoTried).length;
+  const screenPack = R.kind === 'screen';
+  const pending = screenPack ? 0 : R.items.filter(i => i.sci && !i.photoTried).length;
   $('#revCount').textContent =
     `${kept} kept of ${R.items.length}. A board uses 24, drawn with a rarity spread.\n` +
     (kept < 24 ? `Keep ${24 - kept} more before you can start.\n` : '') +
-    (pending ? `Looking up ${pending} more reference photos.` : '');
+    (screenPack
+      ? `Watched on a screen, about ${R.runtime || 45} minutes. No reference photos: there is nothing to photograph, so the hint is what settles an argument.`
+      : pending ? `Looking up ${pending} more reference photos.` : '');
   $('#revNext').textContent = kept < 24 ? `Keep ${24 - kept} more` : `Use these ${kept}`;
   $('#revNext').disabled = kept < 24;
 
@@ -848,6 +853,7 @@ function renderReview() {
     const im = document.createElement('span'); im.className = 'im';
     if (it.photo) im.style.backgroundImage = `url(${it.photo})`;
     else im.textContent = it.emoji || '◆';
+    if (screenPack) im.classList.add('noimg');
     const bd = document.createElement('span'); bd.className = 'bd';
     const t = document.createElement('span'); t.className = 't'; t.textContent = it.label;
     bd.append(t);
@@ -871,11 +877,16 @@ async function packFromReview() {
   }));
   const credits = {};
   for (const i of R.items) if (i.keep && i.credit) credits[i.key] = i.credit;
+  const screenPack = R.kind === 'screen';
   const p = {
     id: 'custom-' + uid(), title: R.title, subtitle: R.subtitle,
     region: R.region || null, season: null, accent: 'beauty',
-    photoDir: '',            // generated items carry absolute photo URLs
-    credits, items, custom: true, theme: R.theme, createdAt: Date.now(),
+    kind: screenPack ? 'screen' : undefined,
+    runtime: screenPack ? (R.runtime || 45) : undefined,
+    // outdoor items carry absolute iNaturalist URLs; a screen board has none
+    photoDir: screenPack ? null : '',
+    credits: screenPack ? {} : credits,
+    items, custom: true, theme: R.theme, createdAt: Date.now(),
   };
   await packs.put(p);
   S.packs[p.id] = p;
