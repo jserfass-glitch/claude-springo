@@ -5,6 +5,14 @@
 
 export const POOL = 36;
 
+/** The app draws its own glyphs, so an item names one of these instead of
+ *  carrying an emoji. Keep in step with ICON_NAMES in icons.js. */
+export const ICONS = [
+  'bloom', 'trio', 'bell', 'spike', 'hood', 'cluster', 'leaf', 'fruit', 'tree', 'fungus',
+  'bird', 'creature', 'water', 'stone', 'structure', 'vehicle', 'sign',
+  'person', 'speech', 'reveal', 'time', 'mark',
+];
+
 export const SYSTEM = `You build item lists for Springo, a bingo game where players mark
 a square when they see the thing it names.
 
@@ -34,6 +42,12 @@ RULES FOR AN OUTDOOR BOARD, every item:
   players use these lists to learn.
 - Items that are not living things (a water tower, a barn quilt) are fine and
   take sci: null.
+- Pick the "icon" that matches the FORM of the thing, because for a plant the
+  form is an identification character a player actually uses: trio for three
+  petals, bell for a nodding bell, spike for a vertical cluster, hood for a
+  spathe, cluster for a head of small flowers, bloom for an ordinary flower,
+  and leaf, fruit, tree, fungus, bird, creature, water, stone, structure,
+  vehicle or sign for everything else. Use mark only when nothing fits.
 
 RULES FOR A SCREEN BOARD, every item:
 - ALWAYS set sci: null. There are no species on a screen board and nothing will
@@ -55,6 +69,12 @@ RULES FOR A SCREEN BOARD, every item:
   minutes; a board of rare ones ends with nobody winning, which is worse.
 - Never write an instruction to drink, or anything that only makes sense as a
   drinking game. Players are 13 and up.
+- Pick the "icon" that matches what the square is about: person for anyone on
+  screen, speech for something said, reveal for a realisation or a discovery,
+  time for clocks and timing, sign for documents and writing, structure for
+  places and buildings, vehicle for anything that moves, water for weather and
+  landscape, and creature, bird, tree or leaf for animals and outdoors seen on
+  screen. Use mark only when nothing fits.
 
 Set usable: false for a theme that cannot produce a safe playable board: an
 outdoor theme that is not observable in public, anything targeting a private
@@ -79,10 +99,11 @@ export const JSON_SHAPE = `Reply with JSON only, no prose and no code fence, sha
   "title": "two to four words",
   "subtitle": "one short line",
   "items": [
-    { "label": "...", "sci": null, "hint": "...", "emoji": "\u{1F33C}", "rarity": 3 }
+    { "label": "...", "sci": null, "hint": "...", "icon": "bloom", "rarity": 3 }
   ]
 }
 "reason" is a sentence only when "usable" is false, otherwise null.
 "runtime" is minutes for a screen board and null for an outdoor one.
 "sci" is a scientific name only for a real living species, and always null on a screen board.
-"rarity" is a whole number from 1 to 5.`;
+"rarity" is a whole number from 1 to 5.
+"icon" is exactly one of: ${ICONS.join(', ')}.`;

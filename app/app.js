@@ -6,6 +6,7 @@ import { boardFor, evaluate, gameCode, stampFrom, decideWinners,
 import { meta, games, marks, photos, packs, outbox, uid, me, setName } from './store.js';
 import * as sync from './sync.js';
 import { SYSTEM, JSON_SHAPE, userMessage } from './prompt.js';
+import { injectSprite, icon, ICON_NAMES } from './icons.js';
 
 const $ = s => document.querySelector(s);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -180,7 +181,7 @@ function renderBoard() {
       const ph = document.createElement('span'); ph.className = 'ph';
       ph.style.backgroundImage = `url(${shot.thumbUrl})`; c.append(ph);
     }
-    const ico = document.createElement('span'); ico.className = 'ico'; ico.textContent = it.emoji || '•';
+    const ico = icon(free ? 'star' : it.icon, { key: free ? null : it.key });
     const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = it.label;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'tick'); svg.setAttribute('viewBox', '0 0 16 16');
@@ -200,8 +201,12 @@ function renderBoard() {
 
 function renderSyncbar() {
   const el = $('#syncbar'); el.textContent = ''; const g = game(); if (!g) return;
-  const add = (t, live) => { const s = document.createElement('span'); s.className = 'pill' + (live ? ' live' : ''); s.textContent = t; el.append(s); };
-  add(g.mode === 'photo' ? '◉ PHOTO' : '○ HONOR');
+  const add = (t, live, dot) => {
+    const s = document.createElement('span'); s.className = 'pill' + (live ? ' live' : '');
+    if (dot) s.append(document.createElement('i'));
+    s.append(document.createTextNode(t)); el.append(s);
+  };
+  add(g.mode === 'photo' ? 'PHOTO' : 'HONOR', g.mode === 'photo', true);
   if (g.shared) add('CODE ' + g.code); else add('SOLO');
   if (S.queued) add(S.queued + ' QUEUED', true);
   else if (sync.cloudState() === false) add('LOCAL ONLY');
@@ -621,12 +626,13 @@ function renderPackList() {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'card';
     const em = document.createElement('span'); em.className = 'em';
-    em.textContent = p.items.find(i => i.emoji && i.key)?.emoji || '◆';
+    const lead = p.items.find(i => i.key);
+    em.append(icon(lead?.icon, { key: lead?.key }));
     const w = document.createElement('span'); w.style.minWidth = '0';
     const t = document.createElement('span'); t.className = 't'; t.textContent = p.title;
     const s = document.createElement('span'); s.className = 's'; s.textContent = p.subtitle;
     w.append(t, document.createElement('br'), s);
-    const go = document.createElement('span'); go.className = 'go'; go.textContent = '›';
+    const go = document.createElement('span'); go.className = 'go'; go.append(icon('chevron'));
     b.append(em, w, go);
     b.addEventListener('click', () => { S.setup = { packId: p.id, mode: 'honor', varied: isScreen(p) }; openSetup(); });
     el.append(b);
@@ -720,7 +726,7 @@ function renderLife() {
     const mine = S.photos.get(`${e.gameId}:${S.me.id}:${e.idx}`);
     if (mine) im.style.backgroundImage = `url(${mine.thumbUrl})`;
     else if (e.item.photo && e.pack.photoDir) im.style.backgroundImage = `url(${e.pack.photoDir}${e.item.photo})`;
-    else im.textContent = e.item.emoji || '◆';
+    else im.append(icon(e.item.icon, { key: e.item.key }));
     const tx = document.createElement('div'); tx.className = 'tx';
     const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = e.item.label;
     const dt = document.createElement('div'); dt.className = 'dt';
@@ -814,7 +820,7 @@ async function generateViaClaude(theme, region) {
     seen.add(key);
     const rarity = Math.min(5, Math.max(1, Math.round(Number(it.rarity) || 3)));
     return { key, label: it.label, sci: screen ? undefined : (it.sci || undefined),
-             hint: it.hint, emoji: it.emoji, rarity };
+             hint: it.hint, icon: ICON_NAMES.includes(it.icon) ? it.icon : 'mark', rarity };
   });
   if (screen) data.runtime = data.runtime || 45;
   return data;
@@ -898,7 +904,7 @@ function renderReview() {
     b.setAttribute('aria-label', `${it.label}, ${it.keep ? 'kept' : 'dropped'}`);
     const im = document.createElement('span'); im.className = 'im';
     if (it.photo) im.style.backgroundImage = `url(${it.photo})`;
-    else im.textContent = it.emoji || '◆';
+    else im.append(icon(it.icon, { key: it.key }));
     if (screenPack) im.classList.add('noimg');
     const bd = document.createElement('span'); bd.className = 'bd';
     const t = document.createElement('span'); t.className = 't'; t.textContent = it.label;
@@ -918,8 +924,8 @@ function renderReview() {
 async function packFromReview() {
   const R = S.review;
   const items = R.items.filter(i => i.keep).map(i => ({
-    key: i.key, label: i.label, sci: i.sci, hint: i.hint, emoji: i.emoji,
-    rarity: i.rarity, photo: i.photo,
+    key: i.key, label: i.label, sci: i.sci, hint: i.hint,
+    rarity: i.rarity, icon: i.icon, photo: i.photo,
   }));
   const credits = {};
   for (const i of R.items) if (i.keep && i.credit) credits[i.key] = i.credit;
@@ -1049,7 +1055,7 @@ $('#addItem').addEventListener('keydown', e => {
   if (!label || !S.review) return;
   const key = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48)
             || 'item-' + S.review.items.length;
-  S.review.items.push({ key, label, sci: null, hint: 'Added by you.', emoji: '\u2795', rarity: 3, keep: true });
+  S.review.items.push({ key, label, sci: null, hint: 'Added by you.', icon: 'mark', rarity: 3, keep: true });
   e.target.value = '';
   renderReview();
 });
@@ -1089,4 +1095,5 @@ $('#syncBtn').addEventListener('click', async () => {
 addEventListener('online', () => sync.syncAll().then(n => { if (n) refresh(); else renderSyncbar(); }));
 addEventListener('visibilitychange', () => { if (!document.hidden) sync.syncAll().then(n => { if (n) refresh(); }); });
 
+injectSprite();
 boot();

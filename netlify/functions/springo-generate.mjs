@@ -9,7 +9,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { getStore } from '@netlify/blobs';
-import { SYSTEM, userMessage, POOL } from '../../app/prompt.js';
+import { SYSTEM, userMessage, POOL, ICONS } from '../../app/prompt.js';
 
 const HEADERS = { 'content-type': 'application/json', 'cache-control': 'no-store' };
 const ok = b => new Response(JSON.stringify(b), { status: 200, headers: HEADERS });
@@ -22,7 +22,7 @@ const Item = z.object({
   sci: z.string().nullable()
     .describe('Scientific name if this is a real living species. Null for everything else, and ALWAYS null on a screen board'),
   hint: z.string().describe('One line telling a non-expert what counts, so two players agree'),
-  emoji: z.string().describe('A single emoji'),
+  icon: z.enum(ICONS).describe('The glyph the app draws for this square; pick the one matching its form'),
   rarity: z.number().int().min(1).max(5)
     .describe('Outdoor: 1 you will see it today, 5 a good year. Screen: 1 several times an episode, 5 once in a season'),
 });
@@ -101,7 +101,7 @@ export default async (req) => {
     let key = String(it.label).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
     while (seen.has(key)) key += '-x';
     seen.add(key);
-    return { key, label: it.label, sci: it.sci || undefined, hint: it.hint, emoji: it.emoji, rarity: it.rarity };
+    return { key, label: it.label, sci: it.sci || undefined, hint: it.hint, icon: it.icon, rarity: it.rarity };
   });
 
   const screen = parsed.kind === 'screen';

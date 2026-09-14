@@ -80,7 +80,7 @@ export function boardFor(game, playerId, pack) {
     : drawPool(pack.items, game.seed);
   const cells = shuffled(pool, rng(game.seed + ':' + playerId));
   if (!game.freeSpace) return cells.slice(0, 25);
-  return [...cells.slice(0, 12), { key: null, label: 'FREE', emoji: '★', free: true }, ...cells.slice(12, 24)];
+  return [...cells.slice(0, 12), { key: null, label: 'FREE', icon: 'star', free: true }, ...cells.slice(12, 24)];
 }
 
 /** Completed lines and the squares that are one away, for the breathe state.

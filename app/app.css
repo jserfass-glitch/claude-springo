@@ -8,15 +8,23 @@
   --lift:0 10px 40px rgba(43,39,34,.16);
   --acc:#F0B040; --acc-ink:#2B2722; --acc-deep:#8A5A00; --acc-soft:#FFC96B;
   --safe-b:env(safe-area-inset-bottom,0px);
+  /* icon colours. Shape says what a square is, colour says which one.
+     Every value clears 3:1 on its surface (WCAG non-text contrast). */
+  --ic-rose:#C2456F; --ic-gold:#9A6100; --ic-moss:#2F7A45; --ic-sky:#1F6E8C;
+  --ic-iris:#4353B5; --ic-plum:#7E3A99; --ic-ember:#A63530; --ic-bark:#6B5442;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
+    --ic-rose:#F08CB0; --ic-gold:#F0B040; --ic-moss:#6FC488; --ic-sky:#7FC4DC;
+    --ic-iris:#93A0E8; --ic-plum:#C48ADA; --ic-ember:#E08A85; --ic-bark:#C0A386;
     --ground:#141210; --surface:#241F1B; --surface-2:#1E1A16;
     --ink:#FBF7F0; --ink-muted:#A69A8C; --hairline:#3A322A;
     --shadow:0 2px 14px rgba(0,0,0,.5); --lift:0 10px 40px rgba(0,0,0,.62);
   }
 }
 :root[data-theme="dark"]{
+    --ic-rose:#F08CB0; --ic-gold:#F0B040; --ic-moss:#6FC488; --ic-sky:#7FC4DC;
+    --ic-iris:#93A0E8; --ic-plum:#C48ADA; --ic-ember:#E08A85; --ic-bark:#C0A386;
   --ground:#141210; --surface:#241F1B; --surface-2:#1E1A16;
   --ink:#FBF7F0; --ink-muted:#A69A8C; --hairline:#3A322A;
   --shadow:0 2px 14px rgba(0,0,0,.5); --lift:0 10px 40px rgba(0,0,0,.62);
@@ -41,8 +49,9 @@ button{font-family:inherit;color:inherit}
 .titlerow{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .titlerow h1{margin:0;font-size:21px;font-weight:800;letter-spacing:-.5px;min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.iconbtn{border:0;background:transparent;color:var(--ink-muted);font-size:18px;cursor:pointer;
-  width:36px;height:36px;border-radius:999px;flex:0 0 auto}
+.iconbtn{border:0;background:transparent;color:var(--ink-muted);cursor:pointer;display:grid;
+  place-items:center;width:36px;height:36px;border-radius:999px;flex:0 0 auto}
+.iconbtn .ic{width:19px;height:19px;color:currentColor}
 .iconbtn:hover{background:var(--surface-2)}
 
 .chips{display:flex;gap:8px;overflow-x:auto;padding:11px 0 12px;scrollbar-width:none;min-width:0;
@@ -83,12 +92,18 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
   color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:2px;padding:4px 3px;transition:border-color .25s,color .25s;
   -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
-.cell .ico{font-size:15px;line-height:1;position:relative;z-index:2}
+.cell .ic{width:22px;height:22px;position:relative;z-index:2;flex:0 0 auto}
+/* one rule for every glyph in the app */
+svg.ic{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+  display:block;color:var(--ink-muted)}
+svg.ic [stroke=none]{fill:currentColor}
+.cell.marked .ic{color:var(--acc-ink)}
+.cell.hasphoto.marked .ic{color:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
 .cell .lbl{font-size:9px;font-weight:700;line-height:1.16;text-align:center;letter-spacing:-.1px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   position:relative;z-index:2;overflow-wrap:anywhere}
 .cell.free{border-style:dashed;border-color:color-mix(in srgb,var(--acc) 55%,transparent)}
-.cell.free .ico{font-size:17px;color:var(--acc-deep)}
+.cell.free .ic{width:24px;height:24px;color:var(--acc-deep);stroke-width:2}
 .cell.marked{border-color:transparent;background:var(--acc);color:var(--acc-ink)}
 .cell.hasphoto.marked{color:#fff}
 .cell.hasphoto.marked .lbl{text-shadow:0 1px 3px rgba(0,0,0,.7)}
@@ -117,14 +132,16 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 /* ---------------------------------------------------------------- bars */
 .syncbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 16px 6px;
   font:600 10.5px ui-monospace,monospace;color:var(--ink-muted);letter-spacing:.03em;min-width:0}
-.pill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--hairline);
-  border-radius:999px;padding:4px 9px;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--hairline);
+  border-radius:999px;padding:4px 10px;white-space:nowrap}
+.pill i{width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;flex:0 0 auto}
+.pill.live i{background:currentColor}
 .pill.live{border-color:color-mix(in srgb,var(--acc) 55%,transparent);color:var(--acc-deep)}
 .tabbar{position:sticky;bottom:0;display:flex;border-top:1px solid var(--hairline);
   background:var(--surface);padding:8px 4px calc(10px + var(--safe-b));margin-top:auto}
 .tab{flex:1;border:0;background:transparent;cursor:pointer;padding:5px 0 3px;display:flex;
   flex-direction:column;align-items:center;gap:3px;font:700 10px Nunito,sans-serif;color:var(--ink-muted)}
-.tab .ti{font-size:18px;line-height:1}
+.tab .ic{width:21px;height:21px;color:currentColor}
 .tab[aria-selected="true"]{color:var(--acc-deep)}
 
 /* ---------------------------------------------------------------- views */
@@ -137,10 +154,13 @@ h2.sec{margin:16px 0 10px;font-size:17px;font-weight:800;letter-spacing:-.3px}
 .card{border:1.5px solid var(--hairline);background:var(--surface);border-radius:22px;
   padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;gap:12px;align-items:center;
   width:100%;text-align:left;min-width:0}
-.card .em{font-size:26px;flex:0 0 auto}
+.card .em{flex:0 0 auto;display:grid;place-items:center;width:40px;height:40px;border-radius:13px;
+  background:var(--surface-2)}
+.card .em .ic{width:23px;height:23px}
 .card .t{font-weight:800;font-size:15px;letter-spacing:-.2px}
 .card .s{font-size:12.5px;color:var(--ink-muted);line-height:1.4}
-.card .go{margin-left:auto;color:var(--ink-muted);font-size:18px;flex:0 0 auto}
+.card .go{margin-left:auto;color:var(--ink-muted);flex:0 0 auto;display:grid;place-items:center}
+.card .go .ic{width:17px;height:17px;stroke-width:2.2}
 .btn{border:0;border-radius:999px;padding:13px 18px;cursor:pointer;font:700 14px Nunito,sans-serif;
   background:var(--acc);color:var(--acc-ink);width:100%}
 .btn.ghost{background:transparent;border:1.5px solid var(--hairline);color:var(--ink)}
@@ -172,7 +192,8 @@ input[type=text].code{text-transform:uppercase;letter-spacing:.24em;font-family:
 .lifegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;padding:12px 0}
 .lifeitem{border:1.5px solid var(--hairline);border-radius:18px;background:var(--surface);
   overflow:hidden;display:flex;flex-direction:column;min-width:0}
-.lifeitem .im{aspect-ratio:1;background:var(--surface-2) center/cover;display:grid;place-items:center;font-size:24px}
+.lifeitem .im{aspect-ratio:1;background:var(--surface-2) center/cover;display:grid;place-items:center}
+.lifeitem .im .ic{width:26px;height:26px}
 .lifeitem .tx{padding:7px 8px 9px}
 .lifeitem .nm{font-size:11px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
 .lifeitem .dt{font:500 9.5px ui-monospace,monospace;color:var(--ink-muted);margin-top:2px}
@@ -237,7 +258,8 @@ input[type=text].code{text-transform:uppercase;letter-spacing:.24em;font-family:
   width:100%;min-width:0;transition:opacity .2s,border-color .2s}
 .revitem[aria-pressed="false"]{opacity:.42;border-style:dashed}
 .revitem .im{width:46px;height:46px;border-radius:13px;flex:0 0 auto;background:var(--surface-2)
-  center/cover;display:grid;place-items:center;font-size:20px;overflow:hidden}
+  center/cover;display:grid;place-items:center;overflow:hidden}
+.revitem .im .ic{width:24px;height:24px}
 .revitem .bd{min-width:0;flex:1}
 .revitem .t{font-weight:800;font-size:14px;letter-spacing:-.2px;overflow-wrap:anywhere}
 .revitem .sci{font:500 10px ui-monospace,monospace;color:var(--ink-muted);font-style:italic;
@@ -251,4 +273,4 @@ input[type=text].code{text-transform:uppercase;letter-spacing:.24em;font-family:
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* a screen board has no photo to show, so the tile is just the emoji */
-.revitem .im.noimg{width:34px;height:34px;background:transparent;font-size:22px}
+.revitem .im.noimg{width:34px;height:34px;background:transparent}

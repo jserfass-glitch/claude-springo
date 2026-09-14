@@ -15,176 +15,176 @@
 "key": "establishing-shot",
 "label": "Scenic establishing shot",
 "hint": "Coastline, village green, country lane. Usually between scenes",
-"emoji": "🌊",
-"rarity": 1
+"rarity": 1,
+"icon": "water"
 },
 {
 "key": "someone-lies",
 "label": "Someone lies to the detective",
 "hint": "You know it is a lie. It does not have to be proven yet",
-"emoji": "🤥",
-"rarity": 1
+"rarity": 1,
+"icon": "speech"
 },
 {
 "key": "overheard",
 "label": "Overheard conversation",
 "hint": "Someone hears something they were not meant to",
-"emoji": "👂",
-"rarity": 1
+"rarity": 1,
+"icon": "speech"
 },
 {
 "key": "cup-of-tea",
 "label": "Tea or coffee poured",
 "hint": "Poured, offered or carried. Drinking it is optional",
-"emoji": "☕",
-"rarity": 1
+"rarity": 1,
+"icon": "mark"
 },
 {
 "key": "awkward-question",
 "label": "A question nobody wants to answer",
 "hint": "The detective asks; the room goes quiet",
-"emoji": "❓",
-"rarity": 1
+"rarity": 1,
+"icon": "speech"
 },
 {
 "key": "unannounced-entry",
 "label": "Someone walks in unannounced",
 "hint": "No knock, or a knock nobody waited for",
-"emoji": "🚪",
-"rarity": 1
+"rarity": 1,
+"icon": "person"
 },
 {
 "key": "body-found",
 "label": "The body is found",
 "hint": "On screen or reported. First discovery only",
-"emoji": "🫥",
-"rarity": 2
+"rarity": 2,
+"icon": "person"
 },
 {
 "key": "red-herring",
 "label": "A red herring suspect",
 "hint": "Someone is set up to look guilty and is not",
-"emoji": "🐟",
-"rarity": 2
+"rarity": 2,
+"icon": "person"
 },
 {
 "key": "stay-out-of-it",
 "label": "Told to stay out of it",
 "hint": "An official tells the detective this is not their business",
-"emoji": "✋",
-"rarity": 2
+"rarity": 2,
+"icon": "speech"
 },
 {
 "key": "will-or-inheritance",
 "label": "A will or inheritance",
 "hint": "Money that changes hands on a death gets mentioned",
-"emoji": "📜",
-"rarity": 2
+"rarity": 2,
+"icon": "sign"
 },
 {
 "key": "small-detail",
 "label": "A small detail breaks a lie",
 "hint": "A hat, a time, a stain. Something tiny undoes a story",
-"emoji": "🔍",
-"rarity": 2
+"rarity": 2,
+"icon": "reveal"
 },
 {
 "key": "weather-turns",
 "label": "Weather at the wrong moment",
 "hint": "Rain, fog or wind arrives exactly when it is dramatic",
-"emoji": "🌧",
-"rarity": 2
+"rarity": 2,
+"icon": "water"
 },
 {
 "key": null,
 "label": "FREE",
 "hint": "Free space",
-"emoji": "★",
-"rarity": 1
+"rarity": 1,
+"icon": "mark"
 },
 {
 "key": "aha-moment",
 "label": "The aha moment",
 "hint": "The detective visibly realises something, usually mid-sentence",
-"emoji": "💡",
-"rarity": 3
+"rarity": 3,
+"icon": "reveal"
 },
 {
 "key": "the-gathering",
 "label": "Everyone in one room",
 "hint": "All the suspects assembled for the explanation",
-"emoji": "🪑",
-"rarity": 3
+"rarity": 3,
+"icon": "person"
 },
 {
 "key": "flashback",
 "label": "Flashback reconstruction",
 "hint": "The crime replayed, right or wrong",
-"emoji": "⏪",
-"rarity": 3
+"rarity": 3,
+"icon": "time"
 },
 {
 "key": "read-aloud",
 "label": "A letter or paper read aloud",
 "hint": "Out loud, to someone else or to camera",
-"emoji": "📰",
-"rarity": 3
+"rarity": 3,
+"icon": "sign"
 },
 {
 "key": "second-life",
 "label": "Someone has a secret second life",
 "hint": "A hidden name, marriage, debt or past",
-"emoji": "🎭",
-"rarity": 3
+"rarity": 3,
+"icon": "person"
 },
 {
 "key": "sceptical-officer",
 "label": "The local officer is sceptical",
 "hint": "Police doubt the amateur, out loud",
-"emoji": "👮",
-"rarity": 3
+"rarity": 3,
+"icon": "person"
 },
 {
 "key": "locked-room",
 "label": "A locked door or window matters",
 "hint": "How someone got in or out is the question",
-"emoji": "🔐",
-"rarity": 3
+"rarity": 3,
+"icon": "structure"
 },
 {
 "key": "alibi-timing",
 "label": "An alibi timed to the minute",
 "hint": "Clocks, trains, timetables. The minutes are the point",
-"emoji": "⏱",
-"rarity": 3
+"rarity": 3,
+"icon": "time"
 },
 {
 "key": "confession",
 "label": "The murderer confesses out loud",
 "hint": "Says it. Not just caught, told",
-"emoji": "😰",
-"rarity": 4
+"rarity": 4,
+"icon": "speech"
 },
 {
 "key": "last-escape",
 "label": "One last attempt to escape",
 "hint": "A run, a car, a weapon after being named",
-"emoji": "🏃",
-"rarity": 4
+"rarity": 4,
+"icon": "vehicle"
 },
 {
 "key": "friend-suspected",
 "label": "A friend of the detective is a suspect",
 "hint": "Someone they know is genuinely in the frame",
-"emoji": "👫",
-"rarity": 4
+"rarity": 4,
+"icon": "person"
 },
 {
 "key": "second-body",
 "label": "A second body",
 "hint": "A second death after the first is being investigated",
-"emoji": "⚰",
-"rarity": 5
+"rarity": 5,
+"icon": "person"
 }
 ]
 }

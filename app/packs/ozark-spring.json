@@ -109,224 +109,224 @@
 "key": "trout-lily",
 "label": "Trout Lily",
 "hint": "Mottled leaves, one nodding yellow flower",
-"emoji": "🌼",
 "rarity": 2,
 "sci": "Erythronium americanum",
-"photo": "trout-lily.jpg"
+"photo": "trout-lily.jpg",
+"icon": "bell"
 },
 {
 "key": "bloodroot",
 "label": "Bloodroot",
 "hint": "White petals round a gold centre, leaf wrapped round the stem",
-"emoji": "🤍",
 "rarity": 2,
 "sci": "Sanguinaria canadensis",
-"photo": "bloodroot.jpg"
+"photo": "bloodroot.jpg",
+"icon": "bloom"
 },
 {
 "key": "spring-beauty",
 "label": "Spring Beauty",
 "hint": "Five pale petals with pink veins, grassy leaves",
-"emoji": "🌸",
 "rarity": 1,
 "sci": "Claytonia virginica",
-"photo": "spring-beauty.jpg"
+"photo": "spring-beauty.jpg",
+"icon": "bloom"
 },
 {
 "key": "dutchmans-breeches",
 "label": "Dutchman's Breeches",
 "hint": "A row of tiny white trousers hung upside down",
-"emoji": "🫧",
 "rarity": 3,
 "sci": "Dicentra cucullaria",
-"photo": "dutchmans-breeches.jpg"
+"photo": "dutchmans-breeches.jpg",
+"icon": "cluster"
 },
 {
 "key": "mayapple",
 "label": "Mayapple",
 "hint": "Twin umbrella leaves, the flower hides underneath",
-"emoji": "☂",
 "rarity": 1,
 "sci": "Podophyllum peltatum",
-"photo": "mayapple.jpg"
+"photo": "mayapple.jpg",
+"icon": "leaf"
 },
 {
 "key": "virginia-bluebell",
 "label": "Virginia Bluebell",
 "hint": "Pink buds that open sky blue",
-"emoji": "🔔",
 "rarity": 2,
 "sci": "Mertensia virginica",
-"photo": "virginia-bluebell.jpg"
+"photo": "virginia-bluebell.jpg",
+"icon": "bell"
 },
 {
 "key": "trillium",
 "label": "Trillium",
 "hint": "Three leaves, three petals, no stem to the leaves",
-"emoji": "🔺",
 "rarity": 2,
 "sci": "Trillium recurvatum",
-"photo": "trillium.jpg"
+"photo": "trillium.jpg",
+"icon": "trio"
 },
 {
 "key": "rue-anemone",
 "label": "Rue Anemone",
 "hint": "Thread stems, white flowers that shake in any wind",
-"emoji": "🌿",
 "rarity": 2,
 "sci": "Thalictrum thalictroides",
-"photo": "rue-anemone.jpg"
+"photo": "rue-anemone.jpg",
+"icon": "bloom"
 },
 {
 "key": "wild-ginger",
 "label": "Wild Ginger",
 "hint": "Heart leaves, the brown flower sits on the ground",
-"emoji": "🫘",
 "rarity": 3,
 "sci": "Asarum canadense",
-"photo": "wild-ginger.jpg"
+"photo": "wild-ginger.jpg",
+"icon": "hood"
 },
 {
 "key": "jack-in-the-pulpit",
 "label": "Jack-in-the-Pulpit",
 "hint": "A hooded green spathe over a standing spike",
-"emoji": "🪴",
 "rarity": 3,
 "sci": "Arisaema triphyllum",
-"photo": "jack-in-the-pulpit.jpg"
+"photo": "jack-in-the-pulpit.jpg",
+"icon": "hood"
 },
 {
 "key": "cutleaf-toothwort",
 "label": "Cutleaf Toothwort",
 "hint": "Whorl of deeply cut leaves, white to pink cluster",
-"emoji": "🦷",
 "rarity": 2,
 "sci": "Cardamine concatenata",
-"photo": "cutleaf-toothwort.jpg"
+"photo": "cutleaf-toothwort.jpg",
+"icon": "cluster"
 },
 {
 "key": "blue-eyed-mary",
 "label": "Blue-eyed Mary",
 "hint": "Two-tone blue and white, low and easy to miss",
-"emoji": "👁",
 "rarity": 4,
 "sci": "Collinsia verna",
-"photo": "blue-eyed-mary.jpg"
+"photo": "blue-eyed-mary.jpg",
+"icon": "bloom"
 },
 {
 "key": null,
 "label": "FREE",
 "hint": "Free space",
-"emoji": "★",
-"rarity": 1
+"rarity": 1,
+"icon": "mark"
 },
 {
 "key": "celandine-poppy",
 "label": "Celandine Poppy",
 "hint": "Four yellow petals, orange sap if a stem breaks",
-"emoji": "🟡",
 "rarity": 3,
 "sci": "Stylophorum diphyllum",
-"photo": "celandine-poppy.jpg"
+"photo": "celandine-poppy.jpg",
+"icon": "bloom"
 },
 {
 "key": "shooting-star",
 "label": "Shooting Star",
 "hint": "Swept-back petals on a nodding stalk",
-"emoji": "⭐",
 "rarity": 4,
 "sci": "Primula meadia",
-"photo": "shooting-star.jpg"
+"photo": "shooting-star.jpg",
+"icon": "bell"
 },
 {
 "key": "wood-betony",
 "label": "Wood Betony",
 "hint": "Fern-like red leaves, a twisted yellow spiral",
-"emoji": "🌾",
 "rarity": 3,
 "sci": "Pedicularis canadensis",
-"photo": "wood-betony.jpg"
+"photo": "wood-betony.jpg",
+"icon": "spike"
 },
 {
 "key": "hepatica",
 "label": "Hepatica",
 "hint": "Three-lobed leathery leaf, fuzzy stem, blue to white",
-"emoji": "🪷",
 "rarity": 3,
 "sci": "Anemone acutiloba",
-"photo": "hepatica.jpg"
+"photo": "hepatica.jpg",
+"icon": "bloom"
 },
 {
 "key": "fire-pink",
 "label": "Fire Pink",
 "hint": "Scarlet, notched petals, sticky stem",
-"emoji": "🔥",
 "rarity": 3,
 "sci": "Silene virginica",
-"photo": "fire-pink.jpg"
+"photo": "fire-pink.jpg",
+"icon": "bloom"
 },
 {
 "key": "wild-blue-phlox",
 "label": "Wild Blue Phlox",
 "hint": "Five flat lavender petals, sweet at dusk",
-"emoji": "💠",
 "rarity": 2,
 "sci": "Phlox divaricata",
-"photo": "wild-blue-phlox.jpg"
+"photo": "wild-blue-phlox.jpg",
+"icon": "cluster"
 },
 {
 "key": "green-dragon",
 "label": "Green Dragon",
 "hint": "One leaf divided many ways, a long tongue of a spadix",
-"emoji": "🐉",
 "rarity": 5,
 "sci": "Arisaema dracontium",
-"photo": "green-dragon.jpg"
+"photo": "green-dragon.jpg",
+"icon": "hood"
 },
 {
 "key": "yellow-violet",
 "label": "Yellow Violet",
 "hint": "Heart leaves on the stem, not just at the base",
-"emoji": "💛",
 "rarity": 2,
 "sci": "Viola pubescens",
-"photo": "yellow-violet.jpg"
+"photo": "yellow-violet.jpg",
+"icon": "bloom"
 },
 {
 "key": "ozark-wake-robin",
 "label": "Ozark Wake Robin",
 "hint": "Small white trillium, Ozark endemic",
-"emoji": "🌺",
 "rarity": 5,
 "sci": "Trillium pusillum",
-"photo": "ozark-wake-robin.jpg"
+"photo": "ozark-wake-robin.jpg",
+"icon": "trio"
 },
 {
 "key": "pawpaw-bloom",
 "label": "Pawpaw Bloom",
 "hint": "Maroon bell hanging before the leaves come out",
-"emoji": "🥭",
 "rarity": 4,
 "sci": "Asimina triloba",
-"photo": "pawpaw-bloom.jpg"
+"photo": "pawpaw-bloom.jpg",
+"icon": "bell"
 },
 {
 "key": "false-rue-anemone",
 "label": "False Rue Anemone",
 "hint": "Five true petals, opposite leaves",
-"emoji": "🍃",
 "rarity": 2,
 "sci": "Enemion biternatum",
-"photo": "false-rue-anemone.jpg"
+"photo": "false-rue-anemone.jpg",
+"icon": "bloom"
 },
 {
 "key": "bishops-cap",
 "label": "Bishop's Cap",
 "hint": "Snowflake flowers on a bare wand",
-"emoji": "🎩",
 "rarity": 4,
 "sci": "Mitella diphylla",
-"photo": "bishops-cap.jpg"
+"photo": "bishops-cap.jpg",
+"icon": "spike"
 }
 ]
 }
