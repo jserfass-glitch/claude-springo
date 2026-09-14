@@ -55,6 +55,11 @@ the detail. The reasoning is in `docs/09-screen-mode.md`; the short version is
 that a trope fires once for the whole room, so identical boards would have
 everyone marking the same square at the same second.
 
+**Never derive one player's layout from another's by rotating or mirroring.**
+The 16 win conditions are invariant under the symmetries of the square, so a
+rotated board completes at exactly the same moment as the original, 100% of the
+time, measured. Independent shuffles only. `tools/arrangement-ties.mjs`.
+
 **Never bundle a pack named after a show.** Genres are not owned; titles are, and
 app stores reject on their own policy long before a fair-use argument gets
 heard. Show-specific boards come from the user typing a name and generating one.

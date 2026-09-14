@@ -1,7 +1,8 @@
 // Springo. Local-first: every screen reads IndexedDB, the network only fills
 // it and drains the outbox. Nothing here awaits a fetch on a render path.
 
-import { boardFor, evaluate, gameCode, stampFrom, decideWinners, FREE_IDX } from './game.js';
+import { boardFor, evaluate, gameCode, stampFrom, decideWinners,
+         TIE_WINDOW_MS, SCREEN_TIE_WINDOW_MS, FREE_IDX } from './game.js';
 import { meta, games, marks, photos, packs, outbox, uid, me, setName } from './store.js';
 import * as sync from './sync.js';
 
@@ -344,7 +345,8 @@ async function declareWin(line, closingIdx, mark) {
   const g = game(), p = pack(g);
   g.wins = g.wins || [];
   g.wins.push({ playerId: S.me.id, ts: mark.ts, bounded: mark.bounded, line: line.label });
-  g.winners = decideWinners(g.wins);
+  g.winners = decideWinners(g.wins,
+    isScreen(p) ? SCREEN_TIE_WINDOW_MS : TIE_WINDOW_MS);
   g.finishedAt = Date.now();
   await games.put(g);
   if (g.shared) await outbox.add({ id: 'win-' + g.id + '-' + S.me.id, gameId: g.id, event: { type: 'win', gameId: g.id, win: g.wins.at(-1) } });
@@ -584,6 +586,31 @@ function closeSheet() {
 }
 
 /* ------------------------------------------------------------ new / setup */
+function renderSetupNote() {
+  const p = S.packs[S.setup.packId]; if (!p) return;
+  const real = p.items.filter(i => i.key).length;
+  const withPhoto = p.items.filter(i => i.photo).length;
+  if (isScreen(p)) {
+    const mins = p.runtime || 45;
+    $('#setupNote').textContent =
+      `${real} items. Runtime about ${mins} minutes.\n` +
+      `A win usually lands around the ${Math.round(mins * 0.38)} minute mark, ` +
+      `and nearly always lands before the credits.\n` +
+      (S.setup.varied
+        ? 'Varied boards: everyone watches for their own list, and nobody ties.'
+        : 'Same items: the trope fires once for the whole room, so you both mark ' +
+          'the same square in the same second. Arranging the grids differently does ' +
+          'not fix that. It only changes how many marks each of you needs, and about ' +
+          'one game in nine still ends level. Here the winner is whoever taps first.');
+    return;
+  }
+  $('#setupNote').textContent =
+    `${real} items, ${withPhoto} with a reference photo.\n` +
+    `Typical bingo: 13 marks, usually 11 to 16.\n` +
+    (real <= 24 ? 'This pack is exactly 24 items, so varied boards fall back to same items.'
+                : `Varied boards can draw different items for each player from these ${real}.`);
+}
+
 function renderPackList() {
   const el = $('#packList'); el.textContent = '';
   // a reviewed list is a real pack, so it is replayable like any other
@@ -600,7 +627,7 @@ function renderPackList() {
     w.append(t, document.createElement('br'), s);
     const go = document.createElement('span'); go.className = 'go'; go.textContent = '›';
     b.append(em, w, go);
-    b.addEventListener('click', () => { S.setup = { packId: p.id, mode: 'honor', varied: false }; openSetup(); });
+    b.addEventListener('click', () => { S.setup = { packId: p.id, mode: 'honor', varied: isScreen(p) }; openSetup(); });
     el.append(b);
   }
 }
@@ -609,7 +636,7 @@ function openSetup() {
   const p = S.packs[S.setup.packId];
   if (!p) { setView('new'); return; }
   const screenPack = isScreen(p);
-  if (screenPack) { S.setup.mode = 'honor'; S.setup.varied = true; }
+  if (screenPack) S.setup.mode = 'honor';   // photographing a television proves nothing
   $('#setupTitle').textContent = p.title;
   // photographing a television proves nothing, so photo mode is not offered
   $('#modeRow').hidden = screenPack;
@@ -618,16 +645,7 @@ function openSetup() {
   document.querySelectorAll('[data-varied]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.varied === '1') === S.setup.varied));
   const real = p.items.filter(i => i.key).length;
   const withPhoto = p.items.filter(i => i.photo).length;
-  $('#setupNote').textContent = screenPack
-    ? `${real} items. Runtime about ${p.runtime || 45} minutes.\n` +
-      `A win usually lands around the ${Math.round((p.runtime || 45) * 0.38)} minute mark, ` +
-      `and nearly always lands before the credits.\n` +
-      `Varied boards are forced on: the trope fires once for the whole room, so ` +
-      `identical boards would have everyone marking the same square at the same second.`
-    : `${real} items, ${withPhoto} with a reference photo.\n` +
-      `Typical bingo: 13 marks, usually 11 to 16.\n` +
-      (real <= 24 ? 'This pack is exactly 24 items, so varied boards fall back to same items.'
-                  : `Varied boards can draw different items for each player from these ${real}.`);
+  renderSetupNote();
   setView('setup');
 }
 
@@ -953,6 +971,7 @@ document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click'
 document.querySelectorAll('[data-varied]').forEach(b => b.addEventListener('click', () => {
   S.setup.varied = b.dataset.varied === '1';
   document.querySelectorAll('[data-varied]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  renderSetupNote();
 }));
 $('#createBtn').addEventListener('click', createGame);
 $('#genBtn').addEventListener('click', generateList);
@@ -960,7 +979,7 @@ $('#themeIn')?.addEventListener('keydown', e => { if (e.key === 'Enter') generat
 $('#revBack').addEventListener('click', () => { S.review = null; setView('new'); });
 $('#revNext').addEventListener('click', async () => {
   const p = await packFromReview();
-  S.setup = { packId: p.id, mode: 'honor', varied: false };
+  S.setup = { packId: p.id, mode: 'honor', varied: isScreen(p) };
   openSetup();
 });
 $('#addItem').addEventListener('keydown', e => {

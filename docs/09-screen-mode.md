@@ -39,13 +39,85 @@ Simulated over 200,000 two-player episodes (`tools/screen-pace.mjs`):
 | Varied items, own list | **0.0%** | 0.0% |
 
 One in nine two-player games ends with both players completing a line on the
-*same trigger*, and with four players it is far worse. Even the games that are
-not exact ties are decided entirely by layout luck, because both players marked
-identical squares at identical moments.
+*same trigger*. With more people in the room it gets worse:
 
-**Screen mode defaults to varied boards.** The exact reverse of the outdoor
-default. Each player watches for their own list, which is also what makes the
-room fun: you are shouting about a square nobody else has.
+| Players | At least two tie for the win |
+|---|---|
+| 2 | 10.8% |
+| 3 | 14.8% |
+| 4 | 17.1% |
+| 6 | 19.8% |
+
+### Arranging the boards differently does not fix this
+
+This is the obvious objection and it is worth answering precisely, because the
+intuition behind it is correct everywhere except here.
+
+The boards **are** arranged differently. The simulation above already gives each
+player an independently shuffled grid of the same items. The tie rate of 10.8%
+is the rate *with* different arrangements.
+
+The reason is that a shared screen removes the clock as a tiebreaker. Work
+through what a layout actually decides:
+
+- Both players hold the same 24 items, so at every instant they have exactly the
+  same set of squares marked. Only the positions differ.
+- A layout therefore does not change *when* you mark anything. It changes only
+  **how many marks you need** before some line of yours closes.
+- That number is a narrow distribution, because it is a property of a 5 by 5
+  grid with 16 win conditions, not of the arrangement:
+
+```
+  marks needed to win:  7:2%  8:3%  9:5%  10:8%  11:10%  12:13%
+                       13:15% 14:15% 15:13% 16:9%  17:5%  18:2%
+```
+
+- So two players are drawing independently from that distribution, and they tie
+  when they draw the same number. The chance of that is the sum of the squared
+  probabilities, which comes to **10.8%**, matching the measured tie rate to the
+  decimal. Arrangement is the only variable in the model, and it is already
+  doing everything it can.
+
+Outdoors the same collision happens at the same rate, about 11% of two-player
+games need the same *number* of marks. It never shows up as a tie because the
+players reach their thirteenth mark days apart. On a shared screen everyone's
+thirteenth mark lands in the same second, so a collision in the count *is* the
+tie. The clock is what was breaking ties outdoors, and the screen takes it away.
+
+### A warning worth encoding
+
+If anyone ever implements "arrange it differently" as a transform of a base
+board, measure it first. Rotating or mirroring a grid is the most natural way to
+do that and it is catastrophic:
+
+| Second board is | Ties |
+|---|---|
+| An independent shuffle | 10.8% |
+| The first board rotated 90 degrees | **100%** |
+| Rotated 180 degrees | **100%** |
+| Mirrored | **100%** |
+
+The set of 16 win conditions is invariant under the symmetries of the square:
+rotation maps rows to columns, diagonals to diagonals, and corner stamps to
+corner stamps. So a rotated board completes at precisely the same moment as the
+original, every single time. Independent shuffles only.
+
+### What actually fixes it
+
+**Varied items.** Each player draws their own list, so they no longer mark in
+lockstep and the clock comes back as a tiebreaker. Measured tie rate: 0.0%.
+This is the default for screen mode.
+
+**Or strict tap order**, if you want same-items play. There is a real argument
+for same items on a screen: the whole room watching for the same things and
+shouting at once is good fun, and it makes every board comparable. If you want
+that, the tiebreaker cannot be the layout, it has to be the thumb. Screen mode
+resolves same-item games by who tapped first, with no tie window at all, which
+turns the last square into a reaction race. Outdoor mode keeps its five-minute
+window, because punishing the player with worse cell coverage is exactly what
+that window exists to prevent.
+
+The one thing that does not work is hoping the arrangement sorts it out.
 
 ## Measured: the rarity spread has to change too
 

@@ -66,7 +66,14 @@ export function drawPool(items, seed) {
 }
 
 /** A player's 25 cells. Deterministic: same inputs, same board, any device,
- *  no network. `varied` gives each player different items from a larger pool. */
+ *  no network. `varied` gives each player different items from a larger pool.
+ *
+ *  NEVER derive one player's layout from another's by rotating or mirroring it.
+ *  The 16 win conditions are invariant under the symmetries of the square:
+ *  rotation maps rows to columns, diagonals to diagonals, and corner stamps to
+ *  corner stamps. A rotated board therefore completes at exactly the same
+ *  moment as the original, 100% of the time, measured. Independent shuffles
+ *  only. See docs/09-screen-mode.md and tools/arrangement-ties.mjs. */
 export function boardFor(game, playerId, pack) {
   const pool = game.varied
     ? drawPool(pack.items, game.seed + ':' + playerId)
@@ -100,16 +107,23 @@ export function stampFrom(anchor) {
   return { ts: anchor.serverTime + elapsed, bounded: true, anchor: anchor.id };
 }
 
-/** Near-ties are ties. In a game about looking at flowers with your spouse a
- *  tie is a fine outcome and a dispute is not. */
+/** Outdoors, near-ties are ties. In a game about looking at flowers with your
+ *  spouse a tie is a fine outcome and a dispute is not, and a tight window
+ *  would just punish whoever had worse cell coverage.
+ *
+ *  On a shared screen the opposite holds. Everyone marks in the same second, so
+ *  a window of any size swallows every genuine race. Screen mode passes 0 and
+ *  resolves on tap order. */
 export const TIE_WINDOW_MS = 5 * 60 * 1000;
+export const SCREEN_TIE_WINDOW_MS = 0;
 
-export function decideWinners(wins) {
+export function decideWinners(wins, windowMs = TIE_WINDOW_MS) {
   if (!wins.length) return [];
   const sorted = wins.slice().sort((a, b) => a.ts - b.ts);
   const first = sorted[0];
   return sorted
-    .filter(w => w.ts - first.ts <= TIE_WINDOW_MS || !w.bounded || !first.bounded)
+    .filter(w => w.ts - first.ts <= windowMs
+      || (windowMs > 0 && (!w.bounded || !first.bounded)))
     .map(w => w.playerId);
 }
 
