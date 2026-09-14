@@ -1,7 +1,7 @@
 // Springo service worker. The whole point of this file is cold-start offline:
 // opening the app in a hollow with no signal has to work, not just keeping it
 // open while signal drops.
-const VERSION = 'springo-v4';
+const VERSION = 'springo-v5';
 const SHELL = [
   './', './index.html', './app.css', './app.js', './game.js', './store.js', './sync.js',
   './icons.js', './prompt.js',

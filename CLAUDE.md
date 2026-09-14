@@ -73,6 +73,17 @@ what a square is, and a hash of the item key picks one of eight colours so a
 board of flowers still reads as distinct things. `ICONS` in `app/prompt.js` must
 stay in step with `ICON_NAMES` in `app/icons.js`.
 
+**Test touch with touch.** A tap dispatches a synthesized `click` a few
+milliseconds after `pointerup`. With a mouse that click targets the element the
+gesture started on; with a finger it hit-tests at the touch point, so anything
+that just appeared under the thumb receives it. That silently ate every sheet
+this app opened on a phone while passing every mouse-driven test. Playwright
+needs `hasTouch: true` plus `touchscreen.tap` to catch it.
+
+**A file input can only be opened inside a real user gesture.** `fileIn.click()`
+from a `setTimeout` is ignored on iOS. The hold gesture arms on the timer and
+fires the camera from the `pointerup` handler for exactly this reason.
+
 **No em dashes** anywhere in prose or source.
 
 ## Running it

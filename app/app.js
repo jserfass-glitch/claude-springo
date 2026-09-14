@@ -32,7 +32,7 @@ const S = {
   me: null, games: [], marks: [], packs: {}, photos: new Map(),
   gi: 0, view: 'board', viewingPlayer: null, sheetIdx: null,
   setup: { packId: null, mode: 'honor', varied: false }, review: null, stream: null,
-  queued: 0, quickCapture: false,
+  queued: 0, quickCapture: false, sheetOpenedAt: 0,
 };
 
 const game = () => S.games[S.gi] || null;
@@ -231,7 +231,7 @@ let press = null;
 function clearPress() {
   if (!press) return;
   clearTimeout(press.timer);
-  press.cell.classList.remove('holding');
+  press.cell.classList.remove('holding', 'armed');
   press = null;
 }
 
@@ -259,15 +259,25 @@ function onCellDown(e) {
     press.fired = true;
     cell.classList.remove('holding');
     if (navigator.vibrate) { try { navigator.vibrate([12, 40, 18]); } catch {} }
-    if (isScreen(pack(g))) openSheet(idx); else quickAct(idx, cell);
+    if (isScreen(pack(g))) { press.act = 'sheet'; openSheet(idx); }
+    else if (g.mode === 'photo') {
+      // opening the camera is a file-input click, and browsers only honour that
+      // inside a real user gesture. A timer is not one, so arm here and fire on
+      // release, which is.
+      press.act = 'camera';
+      cell.classList.add('armed');
+    } else { press.act = 'mark'; quickAct(idx, cell); }
   }, HOLD_MS);
 }
 
 function onCellUp(e) {
   if (!press) return;
-  const { idx, fired, cell } = press;
+  const { idx, fired, cell, act } = press;
   clearPress();
-  if (fired) return;                       // the hold already did the work
+  if (fired) {
+    if (act === 'camera') openCamera(idx);  // this handler IS the user gesture
+    return;
+  }
   // Outdoors a tap opens the square, because the reference photo is the reason
   // to open one you have not marked. On a screen there is no reference photo
   // and the player is trying to watch television, so a tap marks.
@@ -280,14 +290,13 @@ function onCellMove(e) {
   if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10) clearPress();
 }
 
+function openCamera(idx) {
+  S.sheetIdx = idx;
+  S.quickCapture = true;
+  $('#fileIn').click();                    // on a phone this is the camera, full screen
+}
+
 function quickAct(idx, cell) {
-  const g = game();
-  if (g.mode === 'photo') {
-    S.sheetIdx = idx;
-    S.quickCapture = true;
-    $('#fileIn').click();                  // on a phone this is the camera, full screen
-    return;
-  }
   const r = cell.getBoundingClientRect();
   doMark(idx, r.width / 2, r.height / 2);
 }
@@ -508,7 +517,12 @@ function renderSheetButtons() {
     if (g.mode === 'photo') add(S.photos.has(`${g.id}:${S.me.id}:${idx}`) ? 'Retake' : 'Add a photo', '', () => $('#fileIn').click());
     if (marked) add('Unmark', 'danger', async e => {
       const b = e.currentTarget;
-      if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Tap again to unmark'; return; }
+      if (!b.dataset.armed) {
+        b.dataset.armed = '1';
+        b.classList.add('confirm');
+        b.textContent = 'Tap again to unmark';
+        return;
+      }
       const m = myMarks(g).find(x => x.idx === idx);
       m.undoneAt = Date.now();
       await marks.put(m);
@@ -570,6 +584,7 @@ function openSheet(idx) {
 
   $('#pipe').hidden = true;
   renderSheetButtons();
+  S.sheetOpenedAt = performance.now();
   $('#scrim').classList.add('on'); $('#sheet').classList.add('up');
   meta.get('heldHint').then(seen => {
     if (seen || theirs) return;
@@ -589,6 +604,18 @@ function openSheet(idx) {
 
 function closeSheet() {
   stopCamera(); $('#scrim').classList.remove('on'); $('#sheet').classList.remove('up'); S.sheetIdx = null;
+}
+
+/** A tap that opens the sheet also dispatches a synthesized click about 4ms
+ *  later. With a mouse that click targets the cell, but a finger hit-tests at
+ *  the touch point and lands on the scrim that just appeared, closing the sheet
+ *  instantly. Two guards: the scrim dismisses on pointerdown, which the opening
+ *  gesture already spent on the cell, and anything arriving in the first
+ *  moments after opening is ignored. */
+const SHEET_GUARD_MS = 350;
+function dismissSheet() {
+  if (performance.now() - (S.sheetOpenedAt || 0) < SHEET_GUARD_MS) return;
+  closeSheet();
 }
 
 /* ------------------------------------------------------------ new / setup */
@@ -1022,7 +1049,7 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   if (v === 'board' && !game()) { setView('new'); return; }
   setView(v);
 }));
-$('#scrim').addEventListener('click', closeSheet);
+$('#scrim').addEventListener('pointerdown', dismissSheet);
 $('#shutter').addEventListener('click', fromVideo);
 $('#fileIn').addEventListener('change', e => {
   const f = e.target.files?.[0]; if (!f) return;

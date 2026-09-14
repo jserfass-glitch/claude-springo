@@ -274,3 +274,9 @@ input[type=text].code{text-transform:uppercase;letter-spacing:.24em;font-family:
 
 /* a screen board has no photo to show, so the tile is just the emoji */
 .revitem .im.noimg{width:34px;height:34px;background:transparent}
+
+/* held past the threshold: releasing will open the camera */
+.cell.armed::after{content:"";position:absolute;inset:0;border-radius:18px;z-index:3;
+  box-shadow:inset 0 0 0 3px var(--acc);background:color-mix(in srgb,var(--acc) 16%,transparent)}
+/* a destructive confirm should look like one */
+.btn.danger.confirm{background:var(--ic-ember);border-color:transparent;color:#fff;font-weight:700}
