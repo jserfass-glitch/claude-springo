@@ -5,6 +5,7 @@ import { boardFor, evaluate, gameCode, stampFrom, decideWinners,
          TIE_WINDOW_MS, SCREEN_TIE_WINDOW_MS, FREE_IDX } from './game.js';
 import { meta, games, marks, photos, packs, outbox, uid, me, setName } from './store.js';
 import * as sync from './sync.js';
+import { SYSTEM, JSON_SHAPE, userMessage } from './prompt.js';
 
 const $ = s => document.querySelector(s);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -791,6 +792,34 @@ async function resolvePhotos(items, onEach) {
   await Promise.all(workers);
 }
 
+/** Where the page is hosted with no function behind it but Claude reachable
+ *  directly, generation still works: same rules, asked from the browser. Inert
+ *  anywhere window.claude is absent, which is every normal deployment. */
+async function generateViaClaude(theme, region) {
+  if (typeof window.claude?.use !== 'function') return null;
+  const sample = await window.claude.use('sample');
+  if (!sample) return null;
+  const data = await sample.json(
+    `${SYSTEM}\n\n${JSON_SHAPE}\n\n${userMessage({ theme, region })}`,
+    { modelTier: 'default' },
+  );
+  if (!data || !Array.isArray(data.items)) return null;
+  // the server normalises keys; do the same here so both paths agree
+  const seen = new Set();
+  const screen = data.kind === 'screen';
+  data.items = data.items.map(it => {
+    let key = String(it.label || '').toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48) || 'item';
+    while (seen.has(key)) key += '-x';
+    seen.add(key);
+    const rarity = Math.min(5, Math.max(1, Math.round(Number(it.rarity) || 3)));
+    return { key, label: it.label, sci: screen ? undefined : (it.sci || undefined),
+             hint: it.hint, emoji: it.emoji, rarity };
+  });
+  if (screen) data.runtime = data.runtime || 45;
+  return data;
+}
+
 async function generateList() {
   const theme = $('#themeIn').value.trim();
   const region = $('#regionIn').value.trim();
@@ -800,14 +829,31 @@ async function generateList() {
   note.innerHTML = '<span class="spin"></span> Building a list for "' + theme + '". This takes a few seconds.';
   btn.disabled = true;
   try {
+    let data = null;
     const res = await fetch('/api/springo/generate', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ theme, region }),
-    });
-    if (res.status === 503) throw new Error('Theme generation is not switched on for this deployment. The ready-made packs below work offline and need no server.');
-    if (res.status === 429) throw new Error((await res.json()).error || 'Too many new themes today.');
-    if (!res.ok) throw new Error('Generation failed. The ready-made packs still work.');
-    const data = await res.json();
+    }).catch(() => null);
+
+    if (res && res.ok) {
+      data = await res.json();
+    } else if (!res || res.status === 404 || res.status === 503) {
+      // no function behind this deployment; ask Claude from the page instead
+      note.innerHTML = '<span class="spin"></span> Asking Claude for a list. '
+        + 'This takes up to a minute the first time.';
+      try {
+        data = await generateViaClaude(theme, region);
+      } catch (e) {
+        if (e && e.code === 'not_granted') throw new Error('Generation needs your permission to ask Claude. Reload and allow it, or use a ready-made pack below.');
+        if (e && e.code === 'rate_limited') throw new Error('Too many requests just now. Give it a minute.');
+        throw new Error('Claude could not build that list. The ready-made packs still work.');
+      }
+      if (!data) throw new Error('Theme generation is not switched on here. The ready-made packs below work with no server at all.');
+    } else if (res.status === 429) {
+      throw new Error((await res.json()).error || 'Too many new themes today.');
+    } else {
+      throw new Error('Generation failed. The ready-made packs still work.');
+    }
     if (!data.usable) throw new Error(data.reason || 'That theme will not make a findable board.');
     if (!data.items?.length) throw new Error('Nothing usable came back.');
     note.hidden = true;
@@ -901,9 +947,13 @@ async function warmPackPhotos(p) {
     .map(i => new URL(p.photoDir + i.photo, location.href).href);
   if (!urls.length) return;
   try {
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise(r => setTimeout(() => r(null), 3000)),
+    ]);
+    if (!reg) return;                 // no service worker here; nothing to warm
     (reg.active || navigator.serviceWorker.controller)?.postMessage({ type: 'warm', urls });
-  } catch { /* no service worker: the sheet's empty state is honest */ }
+  } catch { /* the sheet's empty state is honest */ }
 }
 
 navigator.serviceWorker?.addEventListener('message', e => {

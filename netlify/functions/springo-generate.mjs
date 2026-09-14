@@ -9,13 +9,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { getStore } from '@netlify/blobs';
+import { SYSTEM, userMessage, POOL } from '../../app/prompt.js';
 
 const HEADERS = { 'content-type': 'application/json', 'cache-control': 'no-store' };
 const ok = b => new Response(JSON.stringify(b), { status: 200, headers: HEADERS });
 const bad = (s, m) => new Response(JSON.stringify({ error: m }), { status: s, headers: HEADERS });
 
 const DAILY_LIMIT = 12;        // generation is the one cost that scales with abuse
-const POOL = 36;
 
 const Item = z.object({
   label: z.string().describe('Short name a player reads on a square, 1 to 4 words'),
@@ -38,61 +38,6 @@ const Result = z.object({
   items: z.array(Item),
 });
 
-const SYSTEM = `You build item lists for Springo, a bingo game where players mark
-a square when they see the thing it names.
-
-FIRST decide which kind of board the theme wants, and set "kind".
-
-"outdoor" means the player finds it by going outside: plants, birds, fungi,
-roadside things, weather, a town. This is the default when in doubt.
-
-"screen" means the player watches for it on a television, in a film, or during a
-live event: a series, a genre of series, a film, an awards show, a match, a
-broadcast. Set "runtime" to how long one sitting is.
-
-RULES FOR AN OUTDOOR BOARD, every item:
-- Observable in public, from a path or a roadside. Never anything requiring
-  trespassing, digging, climbing, picking, handling, or approaching an animal.
-- Recognisable by a non-expert given only your hint. "Spring Beauty" works.
-  "Sedge" does not, because nobody can tell sedges apart and the mark is then
-  meaningless.
-- The hint says what to look for, not what it is. Shape, colour, where it grows,
-  what it sits on.
-- Spread the difficulty: about a quarter rarity 1-2, half rarity 3, a quarter
-  rarity 4-5. A board of all-easy ends in an afternoon. A board of all-hard
-  never ends.
-- Set sci only for a real species you are confident occurs in the stated region
-  and season. If you are unsure whether something grows there, leave it out
-  rather than inventing it. A wrong species is the worst failure here, because
-  players use these lists to learn.
-- Items that are not living things (a water tower, a barn quilt) are fine and
-  take sci: null.
-
-RULES FOR A SCREEN BOARD, every item:
-- ALWAYS set sci: null. There are no species on a screen board and nothing will
-  be looked up, so a scientific name is only a chance to be wrong.
-- Write RECURRING PATTERNS, never specific moments. "A relative of the detective
-  is a suspect" is a pattern that comes round again. "The scene where Grady
-  spills the coffee" is one moment, it is the thing you are most likely to be
-  wrong about, and it makes an unwinnable square.
-- Write for the SERIES or the GENRE, never one episode. If the theme names a
-  single episode, generate for its series instead and say so in the subtitle.
-- Prefer things two people in a room would agree happened. "The body is found"
-  settles itself. "The tension builds" does not. Some judgment calls are fine
-  and make the game, but most items should settle themselves.
-- The hint says what COUNTS, because it is the only thing standing between two
-  players and an argument. There is no photograph to check against.
-- Aim the rarity spread at roughly 6 items at 1, 6 at 2, 8 at 3, 3 at 4 and 1 at
-  5, so a win lands a little past the midpoint of the runtime and nearly always
-  lands before the end. A board of common things is over in the first ten
-  minutes; a board of rare ones ends with nobody winning, which is worse.
-- Never write an instruction to drink, or anything that only makes sense as a
-  drinking game. Players are 13 and up.
-
-Set usable: false for a theme that cannot produce a safe playable board: an
-outdoor theme that is not observable in public, anything targeting a private
-person, anything that would put a player in danger, or a theme too vague to
-produce distinct items.`;
 
 const norm = s => String(s || '').toLowerCase().trim().replace(/\s+/g, ' ').slice(0, 120);
 
@@ -136,10 +81,7 @@ export default async (req) => {
       output_config: { effort: 'medium', format: zodOutputFormat(Result) },
       messages: [{
         role: 'user',
-        content: `Theme: ${body.theme}\n` +
-          (region ? `Region or show: ${body.region}\n` : '') +
-          (season ? `Season: ${body.season}\n` : '') +
-          `Propose ${POOL} items. The player will review and cut this to 24.`,
+        content: userMessage({ theme: body.theme, region: body.region, season: body.season }),
       }],
     });
     if (res.stop_reason === 'refusal') {
