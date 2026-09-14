@@ -178,12 +178,57 @@ enough that a particle burst can genuinely make someone ill.
 
 ## Iconography
 
-Rounded stroke icons at 2px, 24px box, matching the letterform roundness. No
-filled icons except the chip dot and the tab bar's selected state.
+Rounded stroke icons at 1.8px on a 24px box, matching the letterform roundness.
+No filled icons except the chip dot and the tab bar's selected state.
 
-Pack items should carry an optional emoji rather than custom art. A curated
-pack with 24 pieces of custom illustration is beautiful and unshippable at the
-rate packs need to be created. Emoji are free, universal, and already rounded.
+**No emoji anywhere.** An earlier version of this section argued for emoji on
+pack items, on the grounds that 24 pieces of custom illustration per pack is
+unshippable at the rate packs get created. The constraint was real; the
+conclusion was wrong. Emoji render differently on every platform, sit at a
+different optical weight to the rest of the type, and read as clip art next to
+a photograph of an actual plant.
+
+What replaces them splits the job one emoji was doing into two channels, because
+one glyph per category would collapse a flower pack into 24 identical blooms:
+
+- **Shape says what kind of thing a square is.** Twenty-two glyphs cover every
+  pack. For plants they are real identification characters, so the glyph is
+  doing botany rather than decoration: `trio` for three petals, `bell` for a
+  nodding bell, `spike` for a vertical cluster, `hood` for a spathe, `cluster`
+  for a head of small flowers, `bloom` for an ordinary flower. The rest are
+  `leaf`, `fruit`, `tree`, `fungus`, `bird`, `creature`, `water`, `stone`,
+  `structure`, `vehicle`, `sign`, and for screen packs `person`, `speech`,
+  `reveal` and `time`.
+- **Colour says which square it is**, hashed from the item key into eight
+  values, so a board of twenty-four flowers still reads as twenty-four
+  different things.
+
+That is what makes it scale: a pack supplies one word per item and gets a
+distinct square, and a generated pack gets the same treatment for free because
+the model picks from the same twenty-two names.
+
+The eight icon colours, checked at 3:1 against their surface. That is the
+non-text contrast threshold, which is the right one for a glyph; the 4.5:1 in
+the palette table above applies to text.
+
+| | Light | ratio | Dark | ratio |
+|---|---|---|---|---|
+| rose | `#C2456F` | 4.80 | `#F08CB0` | 7.06 |
+| gold | `#9A6100` | 5.14 | `#F0B040` | 8.54 |
+| moss | `#2F7A45` | 5.26 | `#6FC488` | 7.71 |
+| sky | `#1F6E8C` | 5.73 | `#7FC4DC` | 8.42 |
+| iris | `#4353B5` | 6.68 | `#93A0E8` | 6.55 |
+| plum | `#7E3A99` | 7.11 | `#C48ADA` | 6.21 |
+| ember | `#A63530` | 6.62 | `#E08A85` | 6.33 |
+| bark | `#6B5442` | 7.07 | `#C0A386` | 6.86 |
+
+A glyph on a marked square takes the accent's ink colour instead, and on a
+square filled with the player's own photo it goes white with a drop shadow, so
+contrast holds without a third palette.
+
+Author these by rendering them and looking. Four of the twenty-two were wrong on
+the first pass: `bell` read as a garden trowel, `leaf` as an almond, `bird` as a
+bean, and the tree's trunk was too short to read as a trunk.
 
 ## The one aesthetic risk
 

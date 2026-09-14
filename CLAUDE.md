@@ -67,6 +67,12 @@ heard. Show-specific boards come from the user typing a name and generating one.
 **`el.hidden` needs the `[hidden]{display:none !important}` rule** in `app.css`,
 because any class that sets `display` silently beats the browser's own rule.
 
+**No emoji anywhere**, in the app, the pack data, the page chrome or the
+generation prompt. Items name one of the 22 glyphs in `app/icons.js`: shape says
+what a square is, and a hash of the item key picks one of eight colours so a
+board of flowers still reads as distinct things. `ICONS` in `app/prompt.js` must
+stay in step with `ICON_NAMES` in `app/icons.js`.
+
 **No em dashes** anywhere in prose or source.
 
 ## Running it
