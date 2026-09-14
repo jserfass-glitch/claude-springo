@@ -42,6 +42,13 @@ facts, impossible difficulty and abusive input at once. See `docs/08`.
 worker pins users to an old build forever. Bump `VERSION` in `sw.js` when the
 shell changes, or clients keep the old files.
 
+**Tap to look, hold to act.** A short tap on a square always opens the sheet,
+in both modes; the reference photo is the reason to open a square you have not
+marked yet, and this game is about identifying things. Holding for `HOLD_MS`
+skips the sheet: honor mode marks, photo mode opens the camera. Never make a
+short tap mark straight from the board face, and never make an action reachable
+ONLY by holding, since a keyboard user cannot hold.
+
 **No em dashes** anywhere in prose or source.
 
 ## Running it

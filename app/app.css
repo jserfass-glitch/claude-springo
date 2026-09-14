@@ -78,7 +78,8 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 .cell{position:relative;overflow:hidden;aspect-ratio:1;border-radius:18px;cursor:pointer;min-width:0;
   border:1.5px solid color-mix(in srgb,var(--acc) 30%,var(--hairline));background:var(--surface);
   color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;padding:4px 3px;transition:border-color .25s,color .25s}
+  gap:2px;padding:4px 3px;transition:border-color .25s,color .25s;
+  -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 .cell .ico{font-size:15px;line-height:1;position:relative;z-index:2}
 .cell .lbl{font-size:9px;font-weight:700;line-height:1.16;text-align:center;letter-spacing:-.1px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
@@ -104,6 +105,10 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 @keyframes breathe{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.84;transform:scale(1.015)}}
 .cell.flash{animation:flash .34s ease-out}
 @keyframes flash{0%{transform:scale(1)}40%{transform:scale(1.08);filter:brightness(1.45)}100%{transform:scale(1)}}
+/* hold to act. The ring closing is what teaches the gesture exists. */
+.cell.holding::after{content:"";position:absolute;inset:0;border-radius:18px;z-index:3;
+  box-shadow:inset 0 0 0 3px var(--acc);opacity:0;animation:hold .46s ease-out forwards}
+@keyframes hold{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:scale(1)}}
 #petals{position:fixed;inset:0;pointer-events:none;z-index:60}
 
 /* ---------------------------------------------------------------- bars */
@@ -184,12 +189,18 @@ input[type=text].code{text-transform:uppercase;letter-spacing:.24em;font-family:
 .sheet .sci{margin:0 0 10px;font:500 11.5px ui-monospace,monospace;color:var(--ink-muted);font-style:italic}
 .sheet .hint{margin:0 0 14px;font-size:13.5px;line-height:1.5;color:var(--ink-muted)}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+/* honor mode never has a photo of your own, so the reference takes the width */
+.pair.solo{grid-template-columns:1fr}
+.pair.solo .pane.mine{display:none}
+.pair.solo .frame{aspect-ratio:4/3}
 .pane{display:flex;flex-direction:column;gap:5px;min-width:0}
 .pane .cap{font:700 9.5px ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted)}
 .pane .frame{aspect-ratio:1;border-radius:16px;overflow:hidden;background:var(--surface-2);
   border:1.5px solid var(--hairline);display:grid;place-items:center;position:relative}
 .pane .frame img{width:100%;height:100%;object-fit:cover;display:block}
 .pane .frame .empty{font-size:10.5px;color:var(--ink-muted);text-align:center;padding:0 8px;line-height:1.4}
+/* an item with no reference photo should not reserve a photo-sized hole */
+.pane .frame.none{aspect-ratio:auto;min-height:0;padding:15px 12px}
 .credit{font:500 9px ui-monospace,monospace;color:var(--ink-muted);line-height:1.45;overflow-wrap:anywhere}
 .finder{position:relative;border-radius:20px;overflow:hidden;background:#111;height:210px;
   margin-bottom:12px;display:none}

@@ -124,7 +124,8 @@ function boardFor(gameSeed: string, playerId: string, pool: Item[], opts: Opts) 
 and it should be, because it is the mode that works while you are holding
 binoculars in the rain.
 
-**Photo mode.** Tapping a square opens the camera. The mark lands the moment
+**Photo mode.** Tapping a square opens it; holding a square goes straight to
+the camera. The mark lands the moment
 the shutter fires, not when the upload completes. This ordering is not
 negotiable: a player out of signal must be able to mark, and the photo uploads
 later from the outbox.

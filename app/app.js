@@ -24,7 +24,8 @@ const PACK_IDS = ['ozark-fall', 'ozark-spring', 'road-trip'];
 const S = {
   me: null, games: [], marks: [], packs: {}, photos: new Map(),
   gi: 0, view: 'board', viewingPlayer: null, sheetIdx: null,
-  setup: { packId: null, mode: 'honor', varied: false }, review: null, stream: null, queued: 0,
+  setup: { packId: null, mode: 'honor', varied: false }, review: null, stream: null,
+  queued: 0, quickCapture: false,
 };
 
 const game = () => S.games[S.gi] || null;
@@ -180,7 +181,12 @@ function renderBoard() {
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', 'M3 8.6 L6.4 12 L13 4.4'); svg.append(path);
     c.append(ico, lbl, svg);
-    c.addEventListener('pointerdown', onPress);
+    c.addEventListener('pointerdown', onCellDown);
+    c.addEventListener('pointerup', onCellUp);
+    c.addEventListener('pointermove', onCellMove);
+    c.addEventListener('pointercancel', clearPress);
+    c.addEventListener('pointerleave', clearPress);
+    c.addEventListener('contextmenu', ev => ev.preventDefault());
     el.append(c);
   });
   renderSyncbar();
@@ -201,23 +207,83 @@ function renderSyncbar() {
 }
 
 /* ---------------------------------------------------------------- marking */
-function onPress(e) {
+/* Tap to look, hold to act.
+ *
+ * A tap always opens the square, in both modes, because the reference photo is
+ * the reason to open a square you have NOT marked: you want it while deciding,
+ * not after. Holding is the fast path back for people who already know what
+ * they are looking at. Honor mode marks; photo mode goes straight to the
+ * camera, skipping the sheet entirely. */
+const HOLD_MS = 460;
+let press = null;
+
+function clearPress() {
+  if (!press) return;
+  clearTimeout(press.timer);
+  press.cell.classList.remove('holding');
+  press = null;
+}
+
+function canQuickAct(idx) {
+  const g = game();
+  if (!g || g.winners?.length) return false;
+  if ((S.viewingPlayer || S.me.id) !== S.me.id) return false;      // their board
+  return !myMarks(g).some(m => m.idx === idx);                     // already mine
+}
+
+function onCellDown(e) {
   const cell = e.currentTarget, idx = +cell.dataset.idx;
   const g = game(), p = pack(g);
-  const viewing = S.viewingPlayer || S.me.id;
-  const cells = boardFor(g, viewing, p);
-  if (cells[idx].free) { toast('Free space. Always yours.'); return; }
-  if (viewing !== S.me.id) { openSheet(idx); return; }
-  const set = new Set(myMarks(g).map(m => m.idx));
-  if (set.has(idx) || g.winners?.length || g.mode === 'photo') { openSheet(idx); return; }
+  if (!g) return;
+  if (boardFor(g, S.viewingPlayer || S.me.id, p)[idx].free) {
+    press = { idx, cell, x: e.clientX, y: e.clientY, fired: true, timer: 0 };
+    toast('Free space. Always yours.');
+    return;
+  }
+  press = { idx, cell, x: e.clientX, y: e.clientY, fired: false, timer: 0 };
+  if (!canQuickAct(idx)) return;
+  cell.classList.add('holding');
+  press.timer = setTimeout(() => {
+    if (!press) return;
+    press.fired = true;
+    cell.classList.remove('holding');
+    if (navigator.vibrate) { try { navigator.vibrate([12, 40, 18]); } catch {} }
+    quickAct(idx, cell);
+  }, HOLD_MS);
+}
+
+function onCellUp(e) {
+  if (!press) return;
+  const { idx, fired } = press;
+  clearPress();
+  if (fired) return;                       // the hold already did the work
+  openSheet(idx);
+}
+
+function onCellMove(e) {
+  // a drag is a scroll, not a hold
+  if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10) clearPress();
+}
+
+function quickAct(idx, cell) {
+  const g = game();
+  if (g.mode === 'photo') {
+    S.sheetIdx = idx;
+    S.quickCapture = true;
+    $('#fileIn').click();                  // on a phone this is the camera, full screen
+    return;
+  }
   const r = cell.getBoundingClientRect();
-  doMark(idx, e.clientX != null ? e.clientX - r.left : r.width / 2,
-              e.clientY != null ? e.clientY - r.top : r.height / 2);
+  doMark(idx, r.width / 2, r.height / 2);
 }
 
 async function doMark(idx, x, y, photo) {
   const g = game();
   const cell = $(`.cell[data-idx="${idx}"]`);
+  if (cell && (x == null || y == null)) {
+    const r = cell.getBoundingClientRect();
+    x = r.width / 2; y = r.height / 2;
+  }
   const stamp = stampFrom(sync.getAnchor());
   const mark = {
     id: uid(), gameId: g.id, playerId: S.me.id, idx,
@@ -374,6 +440,13 @@ async function applyCapture(shot) {
   $('#myCredit').textContent = 'just now · ' + kb(shot.bytes) + ' after compression';
   stopCamera();
 
+  if (S.quickCapture && !already) {
+    S.quickCapture = false;
+    closeSheet();
+    await doMark(idx, null, null, shot);
+    return;
+  }
+  S.quickCapture = false;
   if (already) {
     const prev = S.photos.get(key);
     const rec = { id: key, gameId: g.id, idx, markId: prev?.markId || null, ...shot };
@@ -412,7 +485,7 @@ function renderSheetButtons() {
         setTimeout(() => f.setAttribute('capture', 'environment'), 500);
       });
     } else {
-      add('Mark it', '', () => { closeSheet(); doMark(idx, 0, 0); });
+      add('I saw it', '', () => { closeSheet(); doMark(idx); });
       add('Close', 'ghost', closeSheet);
     }
   } else {
@@ -447,15 +520,23 @@ function openSheet(idx) {
   $('#shHint').textContent = it.hint || 'No identification hint on this pack item.';
 
   const rf = $('#refFrame'), rc = $('#refCredit'); rf.textContent = ''; rc.textContent = '';
+  rf.classList.toggle('none', !(it.photo && p.photoDir));
   if (it.photo && p.photoDir) {
     const im = new Image(); im.src = p.photoDir + it.photo; im.alt = 'Reference photo of ' + it.label;
-    im.onerror = () => { rf.innerHTML = '<span class="empty">Reference photo not downloaded</span>'; };
+    im.onerror = () => {
+      rf.classList.add('none');
+      rf.innerHTML = '<span class="empty">Reference photo not downloaded yet</span>';
+    };
     rf.append(im);
     const cr = p.credits?.[it.key];
     if (cr) rc.textContent = `iNaturalist · ${cr[0]} · ${String(cr[1]).toUpperCase()}`;
   } else {
     rf.innerHTML = '<span class="empty">No open-licence photo. Not every item is a species.</span>';
   }
+
+  // in honor mode there is never a photo of your own; give the reference the
+  // whole width rather than parking an empty pane next to it
+  $('#sheetPair').classList.toggle('solo', g.mode !== 'photo');
 
   const mf = $('#myFrame'), mc = $('#myCredit'); mf.textContent = ''; mc.textContent = '';
   $('#myCap').textContent = theirs ? (g.players.find(x => x.id === viewing)?.name || 'Their') + "'s photo" : 'Your photo';
@@ -470,6 +551,13 @@ function openSheet(idx) {
   $('#pipe').hidden = true;
   renderSheetButtons();
   $('#scrim').classList.add('on'); $('#sheet').classList.add('up');
+  meta.get('heldHint').then(seen => {
+    if (seen || theirs) return;
+    meta.set('heldHint', 1);
+    setTimeout(() => toast(g.mode === 'photo'
+      ? 'Tip: hold a square to go straight to the camera.'
+      : 'Tip: hold a square to mark it without opening this.', 4200), 900);
+  });
   if (!theirs && !set.has(idx) && g.mode === 'photo' && !g.winners?.length) {
     startCamera().then(ok => {
       if (S.sheetIdx === idx) { renderSheetButtons(); if (!ok) toast('Camera unavailable here. Use Open camera.'); }
