@@ -70,7 +70,9 @@ export default async (req) => {
       }
       if (ev.type === 'player' && ev.player?.id) {
         rec.players = rec.players || [];
-        if (!rec.players.some(p => p.id === ev.player.id)) { rec.players.push(ev.player); dirty = true; }
+        const i = rec.players.findIndex(p => p.id === ev.player.id);
+        if (i === -1) { rec.players.push(ev.player); dirty = true; }
+        else if (rec.players[i].name !== ev.player.name) { rec.players[i] = ev.player; dirty = true; }
       }
     }
     if (rec.events.length > MAX_EVENTS * 4) rec.events = rec.events.slice(-MAX_EVENTS * 4);

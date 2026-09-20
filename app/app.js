@@ -143,6 +143,19 @@ function renderScore() {
   }
 }
 
+/** The thumbnail for a square, whoever took it. Your own comes from the local
+ *  blob; another player's comes from the sync endpoint, keyed by mark id so it
+ *  caches forever. Returns null when there is nothing to show yet. */
+function photoSrcFor(g, viewing, idx, markOf) {
+  const local = S.photos.get(`${g.id}:${viewing}:${idx}`);
+  if (local) return { src: local.thumbUrl, remote: false };
+  const m = markOf(idx);
+  if (g.shared && m?.hasPhoto && m.playerId !== S.me.id) {
+    return { src: sync.photoUrl(g.id, m.id), remote: true };
+  }
+  return null;
+}
+
 /* ------------------------------------------------------------------ board */
 function renderBoard() {
   const el = $('#board'); el.textContent = ''; const g = game();
@@ -151,7 +164,10 @@ function renderBoard() {
   const viewing = S.viewingPlayer || S.me.id;
   const isMine = viewing === S.me.id;
   const cells = boardFor(g, viewing, p);
-  const set = new Set(marksOf(g, viewing).map(m => m.idx));
+  const theirMarks = marksOf(g, viewing);
+  const byIdx = new Map(theirMarks.map(m => [m.idx, m]));
+  const markOf = i => byIdx.get(i);
+  const set = new Set(theirMarks.map(m => m.idx));
   const ev = evaluate(set, PATTERNS, g.freeSpace);
   const away = isMine && !g.winners?.length ? new Set(ev.oneAway) : new Set();
 
@@ -175,11 +191,18 @@ function renderBoard() {
     c.setAttribute('aria-label',
       `${it.label}, ${marked ? 'marked' : 'not marked'}, row ${Math.floor(idx / 5) + 1} column ${idx % 5 + 1}`);
 
-    const shot = marked && !free ? S.photos.get(`${g.id}:${viewing}:${idx}`) : null;
+    const shot = marked && !free ? photoSrcFor(g, viewing, idx, markOf) : null;
     if (shot) {
-      c.classList.add('hasphoto');
       const ph = document.createElement('span'); ph.className = 'ph';
-      ph.style.backgroundImage = `url(${shot.thumbUrl})`; c.append(ph);
+      if (shot.remote) {
+        // it may not be uploaded yet, so only claim a photo once it decodes
+        const probe = new Image();
+        probe.onload = () => { ph.style.backgroundImage = `url(${shot.src})`; c.classList.add('hasphoto'); };
+        probe.src = shot.src;
+      } else {
+        ph.style.backgroundImage = `url(${shot.src})`; c.classList.add('hasphoto');
+      }
+      c.append(ph);
     }
     const ico = icon(free ? 'star' : it.icon, { key: free ? null : it.key });
     const lbl = document.createElement('span'); lbl.className = 'lbl'; lbl.textContent = it.label;
@@ -323,6 +346,12 @@ async function doMark(idx, x, y, photo) {
     const rec = { id: key, gameId: g.id, idx, markId: mark.id, ...photo };
     await photos.put(rec);
     S.photos.set(key, { ...rec, thumbUrl: URL.createObjectURL(rec.thumb) });
+    // the thumbnail is what crosses the wire; the full original stays here
+    if (g.shared) {
+      await outbox.add({ id: 'photo-' + mark.id, gameId: g.id,
+                         photo: { markId: mark.id, blob: rec.thumb } });
+      S.queuedPhotos = (S.queuedPhotos || 0) + 1;
+    }
   }
 
   if (cell) {
@@ -477,6 +506,10 @@ async function applyCapture(shot) {
     const rec = { id: key, gameId: g.id, idx, markId: prev?.markId || null, ...shot };
     await photos.put(rec);
     S.photos.set(key, { ...rec, thumbUrl: url });
+    if (g.shared && rec.markId) {
+      await outbox.add({ id: 'photo-' + rec.markId, gameId: g.id,
+                         photo: { markId: rec.markId, blob: rec.thumb } });
+    }
     renderBoard(); renderSheetButtons();
     toast('Photo replaced. The mark did not move.');
   } else {
@@ -574,12 +607,20 @@ function openSheet(idx) {
 
   const mf = $('#myFrame'), mc = $('#myCredit'); mf.textContent = ''; mc.textContent = '';
   $('#myCap').textContent = theirs ? (g.players.find(x => x.id === viewing)?.name || 'Their') + "'s photo" : 'Your photo';
-  const shot = S.photos.get(`${g.id}:${viewing}:${idx}`);
-  if (shot) {
-    const im = new Image(); im.src = shot.thumbUrl; im.alt = 'Photo'; mf.append(im);
-    mc.textContent = new Date(shot.takenAt || Date.now()).toLocaleDateString() + ' · ' + kb(shot.bytes || 0);
+  const local = S.photos.get(`${g.id}:${viewing}:${idx}`);
+  const mk = marksOf(g, viewing).find(m => m.idx === idx);
+  if (local) {
+    const im = new Image(); im.src = local.thumbUrl; im.alt = 'Photo'; mf.append(im);
+    mc.textContent = new Date(local.takenAt || Date.now()).toLocaleDateString() + ' · ' + kb(local.bytes || 0);
+  } else if (g.shared && theirs && mk?.hasPhoto) {
+    mf.innerHTML = '<span class="empty">Loading their photo</span>';
+    const im = new Image(); im.alt = 'Their photo';
+    im.onload = () => { mf.textContent = ''; mf.append(im);
+      mc.textContent = new Date(mk.ts).toLocaleDateString() + ' · synced thumbnail'; };
+    im.onerror = () => { mf.innerHTML = '<span class="empty">Photo not uploaded yet</span>'; mc.textContent = ''; };
+    im.src = sync.photoUrl(g.id, mk.id);
   } else {
-    mf.innerHTML = `<span class="empty">${set.has(idx) ? (theirs ? 'Marked, photo not synced' : 'Marked, no photo') : 'Not marked yet'}</span>`;
+    mf.innerHTML = `<span class="empty">${set.has(idx) ? 'Marked, no photo' : 'Not marked yet'}</span>`;
   }
 
   $('#pipe').hidden = true;
@@ -711,8 +752,13 @@ async function joinByCode(code) {
   try {
     const r = await sync.joinGame(code);
     const g = { ...r.game, unseen: 0, shared: true };
-    if (!g.players.some(p => p.id === S.me.id)) g.players.push({ id: S.me.id, name: S.me.name || 'Player' });
+    const me = { id: S.me.id, name: S.me.name || 'Player' };
+    if (!g.players.some(p => p.id === me.id)) g.players.push(me);
     await games.put(g);
+    // syncGame replaces the roster with the server's, so announce yourself
+    // first or the next pull deletes you from your own game
+    await outbox.add({ id: 'player-' + g.id + '-' + me.id, gameId: g.id,
+                       event: { type: 'player', player: me } });
     const jp = await loadPack(g.packId);
     warmPackPhotos(jp);
     S.games.unshift(g); S.gi = 0;
@@ -1107,7 +1153,12 @@ $('#saveName').addEventListener('click', async () => {
   S.me = await setName(n);
   for (const g of S.games) {
     const p = g.players.find(x => x.id === S.me.id);
-    if (p && p.name !== S.me.name) { p.name = S.me.name; await games.put(g); }
+    if (p && p.name !== S.me.name) {
+      p.name = S.me.name;
+      await games.put(g);
+      if (g.shared) await outbox.add({ id: 'player-' + g.id + '-' + S.me.id, gameId: g.id,
+                                       event: { type: 'player', player: { id: S.me.id, name: S.me.name } } });
+    }
   }
   toast('Saved.');
   renderAll();

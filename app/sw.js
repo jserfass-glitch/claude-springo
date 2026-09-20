@@ -1,7 +1,7 @@
 // Springo service worker. The whole point of this file is cold-start offline:
 // opening the app in a hollow with no signal has to work, not just keeping it
 // open while signal drops.
-const VERSION = 'springo-v5';
+const VERSION = 'springo-v6';
 const SHELL = [
   './', './index.html', './app.css', './app.js', './game.js', './store.js', './sync.js',
   './icons.js', './prompt.js',
@@ -59,7 +59,20 @@ self.addEventListener('fetch', e => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
 
-  // never cache sync; a stale board is worse than no board
+  // a synced photo is immutable by mark id, so it is worth keeping; everything
+  // else under /api/ is live state and a stale board is worse than no board
+  if (url.pathname === '/api/springo/photo') {
+    e.respondWith((async () => {
+      const hit = await caches.match(request);
+      if (hit) return hit;
+      try {
+        const res = await fetch(request);
+        if (res.ok) (await caches.open(VERSION)).put(request, res.clone());
+        return res;
+      } catch { return new Response('', { status: 504 }); }
+    })());
+    return;
+  }
   if (url.pathname.startsWith('/api/')) return;
 
   // reference photos and packs: cache first, they are immutable by filename
