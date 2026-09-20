@@ -158,6 +158,18 @@ Capture, then five steps before anything leaves the phone:
 5. **Queue.** The original stays on device in app storage until the upload
    confirms, then only the thumbnail is retained locally.
 
+**Implemented** in `netlify/functions/springo-photo.mjs`, with one decision the
+design above did not anticipate: **only the thumbnail syncs.** The 400px square,
+about 30KB, is what crosses the wire; the 2048px original stays on the device
+that took it. A board of 24 originals is roughly ten megabytes and a board of
+thumbnails is under one, and the place this app has to work is the place with
+one bar. At 400px in a 160pt frame nobody can tell.
+
+Marks and photos drain on separate paths for the same reason a mark lands before
+its upload finishes: a mark is a fact, a photo is an attachment. A photo that
+fails to upload waits in the outbox and never blocks a mark, a win, or another
+photo.
+
 Storage cost is the line item that quietly kills consumer apps like this.
 At 400KB average and 13 photos per finished game, a user playing twenty games
 a year generates about 100MB. Ten thousand active users is a terabyte a year,

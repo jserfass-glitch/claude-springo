@@ -74,6 +74,28 @@ Generation is rate limited to 12 new themes per client per day, and results are
 cached by normalised theme and region, so replays and near-duplicate wordings
 cost nothing. It is the only part of this that costs real money per call.
 
+## Photos between players
+
+Photos sync, and **only the thumbnail crosses the wire**: the 400px square the
+board already draws, around 30KB. The device that took a photo keeps the 2048px
+original.
+
+That is deliberate rather than lazy. A full board of 24 originals is about ten
+megabytes; the same board of thumbnails is under one. The one place this app has
+to work is the place with one bar of signal, and at 400px in a 160pt frame the
+difference is invisible.
+
+Marks and photos drain separately, marks first. A mark is a few hundred bytes
+and lands immediately; a photo is an attachment that takes as long as it takes,
+and a failed upload never holds up a mark or blocks another photo. Photos wait
+in the outbox until they land, so shooting a whole board out of signal and
+syncing in the car works.
+
+Access is **by unguessable id, not authorization**: anyone holding a game id and
+a mark id can fetch that thumbnail. Both are random and never published, which
+is enough for a game you play with your spouse and is not enough for strangers.
+Real authorization arrives with real accounts.
+
 ## Turning sharing on
 
 Two one-time steps, both on Netlify:
@@ -97,9 +119,6 @@ other person opens the link and is dropped straight into the join flow.
 
 Named honestly, because the gaps are the roadmap:
 
-- **Photos never leave the device.** The sync endpoint carries marks only.
-  Seeing your opponent's photo needs real object storage, which is the next
-  thing to build. Marks, boards and wins do sync.
 - **No push notifications.** The status row and a manual sync are the only ways
   to learn that someone marked something. This matters: the design argues the
   notification is the most important surface in the product, and this build
@@ -126,6 +145,7 @@ Named honestly, because the gaps are the roadmap:
 | `../packs/<id>/` | Reference photos, one directory per pack |
 | `../netlify/functions/springo.mjs` | The sync function |
 | `../netlify/functions/springo-generate.mjs` | Theme generation, on Claude Opus 5 with a structured output schema |
+| `../netlify/functions/springo-photo.mjs` | Photo thumbnails, in Netlify Blobs, served immutable by mark id |
 
 ## Testing it for real
 
