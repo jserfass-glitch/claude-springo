@@ -12,14 +12,27 @@ const $ = s => document.querySelector(s);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const PATTERNS = ['row', 'col', 'diag', 'stamp'];
 
+/* Each accent carries a light set and a dark set, because `deep` is a text
+   colour. A single dark `deep` such as #8A5A00 lands at 2.75:1 on the dark
+   surface, which is what the selected tab label and the live pill are drawn
+   in. Every pair below is measured: ink on fill and deep on surface clear
+   4.5:1, and fill clears 1.9:1 against its own ground so a marked square
+   still reads as a shape. Read them through accentOf(), never directly. */
 const ACCENTS = {
-  trout:    { fill: '#F0B040', ink: '#2B2722', deep: '#8A5A00', soft: '#FFC96B' },
-  beauty:   { fill: '#EE7FA8', ink: '#2B2722', deep: '#A8305C', soft: '#F7A8C3' },
-  mayapple: { fill: '#4FA968', ink: '#2B2722', deep: '#2A6E3C', soft: '#7FC793' },
-  hepatica: { fill: '#6FB4CE', ink: '#2B2722', deep: '#1F6280', soft: '#9AD0E3' },
-  bluebell: { fill: '#5566CC', ink: '#FFFFFF', deep: '#4353B5', soft: '#8E9AE4' },
-  redbud:   { fill: '#9B4FB8', ink: '#FFFFFF', deep: '#7E3A99', soft: '#C08AD6' },
-  trillium: { fill: '#C0453E', ink: '#FFFFFF', deep: '#A63530', soft: '#DE7C76' },
+  trout:    { fill: '#E89C1C', ink: '#1F1C17', deep: '#7A4A00', soft: '#FFC96B',
+              dark: { fill: '#F0B040', ink: '#1F1C17', deep: '#FFC259', soft: '#FFE0A3' } },
+  beauty:   { fill: '#E05A8B', ink: '#1F1C17', deep: '#A02755', soft: '#F7A8C3',
+              dark: { fill: '#F08CB0', ink: '#1F1C17', deep: '#F7A6C2', soft: '#FBCBDC' } },
+  mayapple: { fill: '#3E9D57', ink: '#1F1C17', deep: '#1F5E31', soft: '#7FC793',
+              dark: { fill: '#6FC488', ink: '#1F1C17', deep: '#88D39E', soft: '#B4E5C3' } },
+  hepatica: { fill: '#4FA7C6', ink: '#1F1C17', deep: '#145E7C', soft: '#9AD0E3',
+              dark: { fill: '#7FC4DC', ink: '#1F1C17', deep: '#95D3E8', soft: '#C1E6F2' } },
+  bluebell: { fill: '#4B5CC4', ink: '#FFFFFF', deep: '#3A46A2', soft: '#8E9AE4',
+              dark: { fill: '#93A0E8', ink: '#1F1C17', deep: '#A9B4F0', soft: '#CBD2F7' } },
+  redbud:   { fill: '#9243B0', ink: '#FFFFFF', deep: '#6E2F87', soft: '#C08AD6',
+              dark: { fill: '#C48ADA', ink: '#1F1C17', deep: '#D4A2E6', soft: '#E6CBF2' } },
+  trillium: { fill: '#BC3C34', ink: '#FFFFFF', deep: '#932A26', soft: '#DE7C76',
+              dark: { fill: '#E08A85', ink: '#1F1C17', deep: '#E8A19D', soft: '#F2C8C6' } },
 };
 const ACCENT_KEYS = Object.keys(ACCENTS);
 const PACK_IDS = ['ozark-fall', 'ozark-spring', 'road-trip', 'cozy-mystery'];
@@ -58,11 +71,28 @@ async function loadPack(id) {
 }
 
 /* ------------------------------------------------------------- accent/CSS */
+const prefersDark = matchMedia('(prefers-color-scheme: dark)');
+/** True when the app is painting dark right now, whether that came from the
+ *  Appearance setting or from the phone. */
+function isDarkNow() {
+  const t = document.documentElement.dataset.theme;
+  return t === 'dark' || (!t && prefersDark.matches);
+}
+/** The accent as it should look in the theme on screen. Takes a game, an
+ *  accent key, or nothing, and always returns a usable accent. */
+function accentOf(x) {
+  const key = typeof x === 'string' ? x : x?.accent;
+  const a = ACCENTS[key] || ACCENTS.trout;
+  return isDarkNow() ? { ...a, ...a.dark } : a;
+}
 function applyAccent(key) {
-  const a = ACCENTS[key] || ACCENTS.trout, r = document.documentElement.style;
+  const a = accentOf(key), r = document.documentElement.style;
   r.setProperty('--acc', a.fill); r.setProperty('--acc-ink', a.ink);
   r.setProperty('--acc-deep', a.deep); r.setProperty('--acc-soft', a.soft);
 }
+// an accent applied under one theme is wrong under the other, so follow the
+// phone too, not only the Appearance buttons
+prefersDark.addEventListener('change', () => { const g = game(); if (g) applyAccent(g.accent); });
 
 /* ------------------------------------------------------------------ views */
 function setView(v) {
@@ -101,7 +131,7 @@ function renderChips() {
     b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'tab');
     b.setAttribute('aria-selected', i === S.gi ? 'true' : 'false');
     const d = document.createElement('span'); d.className = 'dot';
-    d.style.background = (ACCENTS[g.accent] || ACCENTS.trout).fill;
+    d.style.background = accentOf(g).fill;
     const t = document.createElement('span'); t.textContent = p.title;
     b.append(d, t);
     if (g.unseen) { const n = document.createElement('span'); n.className = 'badge'; n.textContent = g.unseen; b.append(n); }
@@ -117,7 +147,7 @@ function renderChips() {
 /* ------------------------------------------------------------------ score */
 function renderScore() {
   const el = $('#scorerow'); el.textContent = ''; const g = game(); if (!g) return;
-  const a = ACCENTS[g.accent] || ACCENTS.trout;
+  const a = accentOf(g);
   const viewing = S.viewingPlayer || S.me.id;
   for (const pl of g.players) {
     const b = document.createElement('button');
@@ -176,7 +206,7 @@ function renderBoard() {
   if (!isMine) {
     const other = g.players.find(x => x.id === viewing);
     v.textContent = (other?.name || 'Their') + "'s board";
-    const a = ACCENTS[g.accent] || ACCENTS.trout;
+    const a = accentOf(g);
     v.style.background = a.fill; v.style.color = a.ink;
   }
 
@@ -413,7 +443,7 @@ async function declareWin(line, closingIdx, mark) {
 }
 
 function petals() {
-  const cv = $('#petals'), a = ACCENTS[game().accent] || ACCENTS.trout;
+  const cv = $('#petals'), a = accentOf(game());
   const w = innerWidth, h = innerHeight, dpr = Math.min(devicePixelRatio || 1, 2);
   cv.width = w * dpr; cv.height = h * dpr; cv.style.width = w + 'px'; cv.style.height = h + 'px';
   const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
@@ -808,8 +838,40 @@ function renderLife() {
   }
 }
 
+/* Light is the base palette; dark arrives through prefers-color-scheme and
+   through [data-theme="dark"]. 'auto' means no attribute at all, so the media
+   query decides. The <head> script has already applied this before paint. */
+const THEME_KEY = 'springo.theme';
+const GROUND = { light: '#F2EBDC', dark: '#13110E' };
+
+function themeChoice() {
+  try { const t = localStorage.getItem(THEME_KEY); return t === 'light' || t === 'dark' ? t : 'auto'; }
+  catch { return 'auto'; }
+}
+
+function applyTheme(choice) {
+  if (choice === 'auto') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = choice;
+  try {
+    if (choice === 'auto') localStorage.removeItem(THEME_KEY);
+    else localStorage.setItem(THEME_KEY, choice);
+  } catch { /* private mode: the theme still applies for this session */ }
+
+  // the two theme-color tags are media-scoped, so forcing a theme means
+  // pointing both at the same ground or the browser chrome disagrees
+  const light = $('#tcLight'), dark = $('#tcDark');
+  if (light && dark) {
+    light.content = choice === 'dark' ? GROUND.dark : GROUND.light;
+    dark.content = choice === 'light' ? GROUND.light : GROUND.dark;
+  }
+  for (const b of document.querySelectorAll('#themeOpts .opt'))
+    b.setAttribute('aria-pressed', String(b.dataset.themeChoice === choice));
+  const g = game(); if (g) applyAccent(g.accent);
+}
+
 function renderYou() {
   $('#nameIn').value = S.me.name || '';
+  applyTheme(themeChoice());
   const mine = S.marks.filter(m => m.playerId === S.me.id && !m.undoneAt);
   const wonGames = S.games.filter(g => g.winners?.includes(S.me.id));
   const rows = [
@@ -818,14 +880,15 @@ function renderYou() {
     ['Photos taken', S.photos.size],
   ];
   $('#stats').innerHTML = rows.map(([k, v]) =>
-    `<div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--hairline)">
+    `<div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1.5px solid var(--hairline)">
       <span style="color:var(--ink-muted);font-size:13.5px">${k}</span>
-      <span style="font-weight:800;font-variant-numeric:tabular-nums">${v}</span></div>`).join('');
+      <span style="font:600 17px var(--display);font-variant-numeric:tabular-nums">${v}</span></div>`).join('');
   $('#aboutNote').textContent =
     `Springo, prototype build.\n` +
     `Sync: ${sync.cloudState() === true ? 'on' : sync.cloudState() === false ? 'not deployed, local only' : 'checking'}\n` +
     `Reference photos: iNaturalist, cc0 / cc-by / cc-by-sa, attributed per square.\n` +
-    `Everything is stored on this device. Nothing leaves it except marks you share.`;
+    `Boards and full-size photos stay on this device. In a shared game your marks\n` +
+    `and a thumbnail of each photo go to the server so other players can see them.`;
 }
 
 /* ------------------------------------------------- generate + review list */
@@ -1146,6 +1209,10 @@ $('#shareBtn').addEventListener('click', async () => {
 $('#joinBtn').addEventListener('click', () => {
   const c = $('#joinCode').value.trim().toUpperCase();
   if (c.length === 6) joinByCode(c); else toast('A code is six characters.');
+});
+$('#themeOpts').addEventListener('click', e => {
+  const b = e.target.closest('[data-theme-choice]');
+  if (b) applyTheme(b.dataset.themeChoice);
 });
 $('#saveName').addEventListener('click', async () => {
   const n = $('#nameIn').value.trim();

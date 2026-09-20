@@ -9,41 +9,67 @@ screen. Everything else is cream, ink, and air.
 Named after the flowers that started the game. Seven accents, one per active
 game, so parallel games are told apart by colour before a single word is read.
 
-Every accent ships as **three tokens**, because one hex cannot be a fill, a
-label, and a dark-mode label at the same time:
+Every accent ships as **four tokens per theme**, because one hex cannot be a
+fill, a label, and a dark-mode label at the same time:
 
 - `fill` the saturated version, used for marked squares, chips, buttons
-- `deep` the darkened version, used when the accent is text on a light ground
-- `soft` the lightened version, used when the accent is text on a dark ground
+- `ink` the text that goes **on** the fill, which is not constant
+- `deep` the accent as text on that theme's surface
+- `soft` the lightened version, used only for the win confetti
 
-| Flower | fill | ink on fill | ratio | deep | on cream | soft | on dark |
-|---|---|---|---|---|---|---|---|
-| Trout Lily | `#F0B040` | Loam | 7.76 | `#8A5A00` | 5.55 | `#FFC96B` | 11.75 |
-| Spring Beauty | `#EE7FA8` | Loam | 5.82 | `#A8305C` | 6.06 | `#F7A8C3` | 9.64 |
-| Mayapple | `#4FA968` | Loam | 5.09 | `#2A6E3C` | 5.79 | `#7FC793` | 8.92 |
-| Hepatica | `#6FB4CE` | Loam | 6.42 | `#1F6280` | 6.31 | `#9AD0E3` | 10.63 |
-| Bluebell | `#5566CC` | White | 5.05 | `#4353B5` | 6.26 | `#8E9AE4` | 6.71 |
-| Redbud | `#9B4FB8` | White | 4.99 | `#7E3A99` | 6.66 | `#C08AD6` | 6.67 |
-| Trillium | `#C0453E` | White | 5.05 | `#A63530` | 6.20 | `#DE7C76` | 6.16 |
+Each accent therefore carries a light set and a **dark set**. That is not
+decoration. `deep` is a text colour, and a single light-mode `deep` such as
+`#8A5A00` lands at **2.75:1** on the dark surface, which is exactly what the
+selected tab label, the live pill and the free-square glyph are drawn in. Read
+accents through `accentOf()` in `app/app.js`, never straight out of `ACCENTS`,
+or the dark set is skipped.
 
-Every ratio in that table clears WCAG AA at 4.5:1, measured, not estimated.
-Note that the ink on a fill is **not constant**: yellow, pink, green and blue
-take dark ink, while the violet, purple and red take white. Ship that as a
-token pair (`accent.fill` + `accent.ink`) and never hardcode white text on an
-accent.
+| Flower | light fill | ink | ink:fill | light deep | on paper | dark fill | ink:fill | dark deep | on dark |
+|---|---|---|---|---|---|---|---|---|---|
+| Trout Lily | `#E89C1C` | ink | 7.44 | `#7A4A00` | 7.36 | `#F0B040` | ink | 8.89 | `#FFC259` | 10.35 |
+| Spring Beauty | `#E05A8B` | ink | 4.86 | `#A02755` | 7.08 | `#F08CB0` | ink | 7.34 | `#F7A6C2` | 8.83 |
+| Mayapple | `#3E9D57` | ink | 4.99 | `#1F5E31` | 7.64 | `#6FC488` | ink | 8.03 | `#88D39E` | 9.36 |
+| Hepatica | `#4FA7C6` | ink | 6.21 | `#145E7C` | 7.07 | `#7FC4DC` | ink | 8.76 | `#95D3E8` | 10.07 |
+| Bluebell | `#4B5CC4` | white | 5.79 | `#3A46A2` | 8.01 | `#93A0E8` | ink | 6.82 | `#A9B4F0` | 8.27 |
+| Redbud | `#9243B0` | white | 5.75 | `#6E2F87` | 8.54 | `#C48ADA` | ink | 6.46 | `#D4A2E6` | 7.98 |
+| Trillium | `#BC3C34` | white | 5.48 | `#932A26` | 7.95 | `#E08A85` | ink | 6.58 | `#E8A19D` | 7.91 |
+
+Every ratio above is measured, not estimated, and clears AA at 4.5:1. Note
+that ink on a fill is **not constant**: in light mode the violet, purple and
+red take white while the rest take ink, and in dark mode every fill is light
+enough to take ink. Ship that as a token pair (`fill` + `ink`) and never
+hardcode white text on an accent.
+
+Each fill also clears **1.9:1 against its own ground**, which is the threshold
+that decides whether a marked square reads as a filled shape at arm's length
+in daylight. AA says nothing about that case, so it is a house rule.
 
 Neutrals:
 
-| Token | Light | Dark | Note |
-|---|---|---|---|
-| `ground` | `#FBF7F0` Bloodroot | `#1A1714` | page background |
-| `surface` | `#FFFFFF` | `#262119` | cards, squares |
-| `ink` | `#2B2722` Loam | `#FBF7F0` | 13.89 and 16.71 |
-| `ink-muted` | `#6E6257` | `#A69A8C` | 5.54 and 6.48 |
-| `hairline` | `#E8E0D4` | `#332C25` | 1px borders, never for text |
+| Token | Light | on surface | Dark | on surface |
+|---|---|---|---|---|
+| `ink` | `#1F1C17` | 16.70 | `#FBF7F0` | 15.52 |
+| `ink-muted` | `#564C42` | 8.24 | `#BCAF9C` | 7.70 |
+| `hairline` | `#C2B49B` | 2.01 | `#514735` | 1.82 |
+
+`ground` is `#F2EBDC` light and `#13110E` dark; `surface` is `#FFFDF8` and
+`#221E18`. The paper is deliberately a deeper cream than white so that cards
+and squares separate from it without a shadow doing the work.
+
+`hairline` is never text. Its job is to be a visible edge, so it is held above
+**1.8:1** rather than 4.5:1, and borders are 2px, not 1px. On a poster the
+rules are part of the drawing.
 
 Dark mode is required, not a nice-to-have. Half of this app is used outdoors at
 dawn and dusk.
+
+Light is the base palette: it lives in the bare `:root`, and dark arrives
+through `prefers-color-scheme` and through an explicit `[data-theme="dark"]`.
+The You screen carries an **Appearance** control with Auto, Light and Dark,
+because following the phone is the right default and overriding it is the right
+escape hatch, and because a paper-coloured app is the one people want to show
+someone in the field. The choice is stored in `localStorage` and applied by an
+inline script in `<head>`, so a forced theme never flashes the other one first.
 
 **Do not tint the whole app with the game accent.** Tempting, and wrong: the
 chrome has to stay stable when swiping between games or the app feels like it
@@ -72,31 +98,43 @@ stacked shadows, no inner glows. The colour does the work.
 
 ## Type
 
-Two families.
+The reference is a 1930s WPA national-park poster: condensed gothic capitals,
+letterspaced, over flat colour. Two families, both self-hosted.
 
-- **Display:** a geometric sans with soft, slightly rounded terminals. Nunito,
-  Poppins, or Figtree. Used for the app title, screen headers, square labels,
-  and numbers. The roundness of the letterforms is what carries "rounded" into
-  places a border radius cannot reach.
-- **Body:** the platform default, SF Pro on iOS and Roboto on Android. Nobody
-  needs a custom font for a settings list, and the platform faces handle
-  Dynamic Type correctly for free.
+- **Display: Oswald.** The closest thing on Google Fonts to the Alternate
+  Gothic lettering those posters were set in. Screen titles, section headers,
+  buttons, tab labels, chips, card titles, numerals, and square labels. Set
+  uppercase with positive tracking almost everywhere; the tracking is what
+  separates "poster" from "cramped".
+- **Body: Archivo.** A squarish grotesque that holds up at 12px, which Oswald
+  does not. Running text, hints, option descriptions, input values.
+- Monospace is kept for game codes, photo credits and byte counts only, where
+  the tabular figures earn it.
+
+Both are **self-hosted** in `app/fonts/` and listed in the service worker
+shell. They are not loaded from Google. The app has to open in a hollow with
+no signal, the worker only caches same-origin, and the type now carries the
+whole look, so a cross-origin font would have meant falling back to Helvetica
+exactly when the design matters most. Two variable files, 56KB total, SIL OFL
+1.1, notice in `app/fonts/OFL-NOTICE.txt`.
 
 Scale:
 
-| Role | Size / weight | Tracking |
-|---|---|---|
-| Screen title | 28 / 700 | -0.4 |
-| Section header | 20 / 700 | -0.2 |
-| Square label | 13 / 600, 2 lines max | 0 |
-| Body | 16 / 400 | 0 |
-| Meta and counts | 13 / 500 | 0.2 |
-| Numeric stat | 34 / 800, tabular figures | -0.8 |
+| Role | Size / weight | Tracking | Case |
+|---|---|---|---|
+| Screen title | 24 / 600 display | .06em | upper |
+| Section header | 19 / 600 display | .07em | upper |
+| Button | 15 / 600 display | .07em | upper |
+| Field label | 13 / 500 display | .13em | upper |
+| Tab label | 11 / 500 display | .09em | upper |
+| Square label | 10 / 500 display, 2 lines max | .02em | upper |
+| Body | 16 / 400 body | 0 | sentence |
+| Numeric stat | 46 / 700 display, tabular figures | 0 | n/a |
 
 Square labels are the hard case. Item names run from "Dutchman's Breeches" to
-"Moss". Set them 13/600 centred, two lines with an ellipsis, and vertically
-centred in the square rather than top-aligned, so short and long names look
-deliberate next to each other.
+"Moss". Condensed uppercase turned out to help twice over: it looks like a
+field-guide plate, and it fits roughly a third more characters per line than
+the mixed-case rounded sans it replaced, so fewer names truncate.
 
 ## Motion
 
@@ -207,22 +245,25 @@ That is what makes it scale: a pack supplies one word per item and gets a
 distinct square, and a generated pack gets the same treatment for free because
 the model picks from the same twenty-two names.
 
-The eight icon colours, checked at 3:1 against their surface. That is the
-non-text contrast threshold, which is the right one for a glyph; the 4.5:1 in
-the palette table above applies to text.
+The eight icon colours. 3:1 is the WCAG non-text threshold and the right one
+for a glyph, but every value below clears 6:1, for the reason under the table.
 
 | | Light | ratio | Dark | ratio |
 |---|---|---|---|---|
-| rose | `#C2456F` | 4.80 | `#F08CB0` | 7.06 |
-| gold | `#9A6100` | 5.14 | `#F0B040` | 8.54 |
-| moss | `#2F7A45` | 5.26 | `#6FC488` | 7.71 |
-| sky | `#1F6E8C` | 5.73 | `#7FC4DC` | 8.42 |
-| iris | `#4353B5` | 6.68 | `#93A0E8` | 6.55 |
-| plum | `#7E3A99` | 7.11 | `#C48ADA` | 6.21 |
-| ember | `#A63530` | 6.62 | `#E08A85` | 6.33 |
-| bark | `#6B5442` | 7.07 | `#C0A386` | 6.86 |
+| rose | `#AE2F5C` | 6.15 | `#F599B9` | 8.00 |
+| gold | `#8A5600` | 6.05 | `#F5BB55` | 9.57 |
+| moss | `#266838` | 6.62 | `#7FD196` | 9.05 |
+| sky | `#195C77` | 7.28 | `#8FD0E6` | 9.73 |
+| iris | `#3A46A2` | 8.01 | `#A3AEF0` | 7.79 |
+| plum | `#6E2F87` | 8.54 | `#D09AE4` | 7.44 |
+| ember | `#932A26` | 7.95 | `#E89A95` | 7.49 |
+| bark | `#5A4636` | 8.74 | `#CDB093` | 8.07 |
 
-A glyph on a marked square takes the accent's ink colour instead, and on a
+These sit well above the 3:1 floor on purpose. A 2px stroke at exactly 3:1
+reads as decoration; at 6:1 it reads as ink.
+
+A glyph on a marked square takes the accent's ink colour instead, the free
+square included once it is marked, and on a
 square filled with the player's own photo it goes white with a drop shadow, so
 contrast holds without a third palette.
 

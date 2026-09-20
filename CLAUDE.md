@@ -26,10 +26,24 @@ that mostly works.
 `undoneAt`. That is what makes the offline merge trivial: two devices recording
 the same mark is the same fact twice, not a conflict.
 
-**Ink on an accent is not constant.** Each accent ships `fill`, `ink`, `deep`
-and `soft`. Yellow, pink, green and blue take dark ink; violet, purple and red
-take white. Never hardcode white text on an accent. Ratios are measured and
-listed in `docs/04-design-system.md`.
+**Ink on an accent is not constant, and accents are per-theme.** Each accent
+ships `fill`, `ink`, `deep` and `soft`, twice: a light set and a `dark` set.
+Never hardcode white text on an accent, and **always read accents through
+`accentOf()`**, never straight out of `ACCENTS`. `deep` is a text colour; the
+light-mode `deep` on a dark surface measures 2.75:1, which is what the selected
+tab label and the live pill are drawn in. Ratios are measured and listed in
+`docs/04-design-system.md`.
+
+**Fonts are self-hosted in `app/fonts/` and listed in the `sw.js` shell.** Do
+not add a Google Fonts `<link>` back. The worker only caches same-origin, so a
+cross-origin font drops to Helvetica exactly in the cold-start-offline case the
+whole app is built around. Oswald for display, Archivo for body, SIL OFL 1.1.
+
+**Appearance is Auto, Light or Dark**, stored in `localStorage` under
+`springo.theme` and applied by an inline script in `<head>` so a forced theme
+does not flash the other one before the module loads. Auto means no
+`data-theme` attribute at all, so `prefers-color-scheme` decides. Changing it
+must re-run `applyAccent`, or the shell and the accent disagree.
 
 **Reference photos must be licence-filtered** to `cc0`, `cc-by`, `cc-by-sa`.
 Much of iNaturalist is CC BY-NC, which breaks the moment this charges for

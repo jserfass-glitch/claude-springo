@@ -23,7 +23,9 @@ const body = pick('body', src);
 if (!head || !body) { console.error('could not find head/body in app/index.html'); process.exit(1); }
 
 // keep only what the wrapper does not already supply
-const keep = (head.match(/<(?:title|link)\b[^>]*>(?:[\s\S]*?<\/title>)?/gi) || [])
+// inline head scripts come too: the theme pre-apply has to run before paint
+const keep = (head.match(
+  /<(?:title|link)\b[^>]*>(?:[\s\S]*?<\/title>)?|<script\b(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/gi) || [])
   .filter(t => !/rel=["']manifest["']/i.test(t))
   .filter(t => !/rel=["'](?:apple-touch-)?icon["']/i.test(t));
 

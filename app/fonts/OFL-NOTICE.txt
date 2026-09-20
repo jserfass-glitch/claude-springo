@@ -1,0 +1,8 @@
+Fonts in this directory are redistributed under the SIL Open Font License 1.1.
+
+  Oswald   - Copyright the Oswald Project Authors (github.com/googlefonts/OswaldFont)
+  Archivo  - Copyright the Archivo Project Authors (github.com/Omnibus-Type/Archivo)
+
+Full licence text: https://openfontlicense.org/open-font-license-official-text/
+
+Both files are the Google Fonts latin subset, variable weight axis, unmodified.
