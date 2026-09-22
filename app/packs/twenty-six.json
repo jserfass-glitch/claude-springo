@@ -1,0 +1,273 @@
+{
+"id": "twenty-six",
+"title": "2026",
+"subtitle": "Things nobody had on their bingo card",
+"kind": "news",
+"region": null,
+"season": "any",
+"accent": "trillium",
+"photoDir": null,
+"credits": {},
+"note": "Anything that happens in 2026 counts, including what already has.",
+"items": [
+{
+"key": "legislature-brawl",
+"label": "Brawl in congress",
+"hint": "Punches or shoving in any country's legislature, on camera",
+"rarity": 1,
+"icon": "person"
+},
+{
+"key": "app-ban",
+"label": "Social app banned",
+"hint": "A nationwide block of a major platform, even if it is lifted a week later",
+"rarity": 1,
+"icon": "sign"
+},
+{
+"key": "treasure-dies",
+"label": "Beloved icon dies",
+"hint": "A national treasure. Someone your grandparents and your kids would both recognize",
+"rarity": 2,
+"icon": "person"
+},
+{
+"key": "hot-mic",
+"label": "Hot mic scandal",
+"hint": "A head of state or government caught on a live microphone, audible and reported",
+"rarity": 2,
+"icon": "speech"
+},
+{
+"key": "coup",
+"label": "Military coup",
+"hint": "The military takes power in any country, or tries to",
+"rarity": 2,
+"icon": "structure"
+},
+{
+"key": "zoo-escape",
+"label": "Zoo animal escapes",
+"hint": "An escaped animal makes national news before it is caught",
+"rarity": 2,
+"icon": "creature"
+},
+{
+"key": "airport-drones",
+"label": "Airport drones",
+"hint": "Flights halted at an airport over drone sightings",
+"rarity": 2,
+"icon": "vehicle"
+},
+{
+"key": "m8-quake",
+"label": "Magnitude 8 quake",
+"hint": "Anywhere on Earth. The USGS number settles it",
+"rarity": 2,
+"icon": "stone"
+},
+{
+"key": "ai-chart",
+"label": "AI song hits No. 1",
+"hint": "An AI-made song reaches number one on any Billboard chart",
+"rarity": 2,
+"icon": "mark"
+},
+{
+"key": "leader-quits",
+"label": "Leader resigns",
+"hint": "A prime minister or president quits over a scandal",
+"rarity": 2,
+"icon": "sign"
+},
+{
+"key": "sinkhole",
+"label": "Giant sinkhole",
+"hint": "It takes a car, a house or a lane of road with it",
+"rarity": 2,
+"icon": "stone"
+},
+{
+"key": "deepfake-news",
+"label": "Deepfake hoax",
+"hint": "A real news outlet runs a deepfake as genuine, then retracts",
+"rarity": 2,
+"icon": "speech"
+},
+{
+"key": "renamed",
+"label": "Landmark renamed",
+"hint": "A famous place gets an official new name, and people fight about it",
+"rarity": 2,
+"icon": "sign"
+},
+{
+"key": null,
+"label": "FREE",
+"hint": "Free space",
+"rarity": 1,
+"icon": "mark"
+},
+{
+"key": "us-war",
+"label": "US goes to war",
+"hint": "Strikes on a country the US was not already fighting. Declared or not",
+"rarity": 3,
+"icon": "mark"
+},
+{
+"key": "blackout",
+"label": "National blackout",
+"hint": "A whole country loses power for hours, not minutes",
+"rarity": 3,
+"icon": "time"
+},
+{
+"key": "cable-cut",
+"label": "Undersea cable cut",
+"hint": "It knocks a country or region offline",
+"rarity": 3,
+"icon": "water"
+},
+{
+"key": "volcano",
+"label": "Volcanic ash cloud",
+"hint": "An eruption closes airspace across a region",
+"rarity": 3,
+"icon": "stone"
+},
+{
+"key": "bridge-collapse",
+"label": "Bridge collapses",
+"hint": "A highway or rail bridge, not a footbridge",
+"rarity": 3,
+"icon": "structure"
+},
+{
+"key": "new-species",
+"label": "Big new species",
+"hint": "A new species, formally described, bigger than a housecat",
+"rarity": 3,
+"icon": "creature"
+},
+{
+"key": "de-extinct",
+"label": "Extinct no more",
+"hint": "A company says it brought an extinct animal back. Their word is enough",
+"rarity": 3,
+"icon": "reveal"
+},
+{
+"key": "world-cup-upset",
+"label": "World Cup shocker",
+"hint": "A top-10 team loses to one ranked outside the top 50",
+"rarity": 3,
+"icon": "mark"
+},
+{
+"key": "band-reunion",
+"label": "Band reunites",
+"hint": "A band that said it was over for good announces a tour or show",
+"rarity": 3,
+"icon": "speech"
+},
+{
+"key": "celeb-run",
+"label": "Celeb for president",
+"hint": "Any country. No political office before, and jokes do not count",
+"rarity": 3,
+"icon": "speech"
+},
+{
+"key": "ufo-hearing",
+"label": "UFO hearing",
+"hint": "Congress holds an official hearing on UAPs with sworn witnesses",
+"rarity": 3,
+"icon": "reveal"
+},
+{
+"key": "robot-home",
+"label": "Robot butler",
+"hint": "A paying customer gets a humanoid robot delivered to their home",
+"rarity": 3,
+"icon": "reveal"
+},
+{
+"key": "meteorite-house",
+"label": "Meteorite hits house",
+"hint": "A confirmed space rock, through a roof",
+"rarity": 3,
+"icon": "stone"
+},
+{
+"key": "market-drop",
+"label": "Market drops 5%",
+"hint": "The S&P 500 or the Dow falls 5% in one trading day",
+"rarity": 3,
+"icon": "time"
+},
+{
+"key": "who-emergency",
+"label": "WHO emergency",
+"hint": "The WHO declares a public health emergency of international concern",
+"rarity": 3,
+"icon": "sign"
+},
+{
+"key": "alien-life",
+"label": "Alien life confirmed",
+"hint": "NASA or ESA says so, not a tabloid",
+"rarity": 4,
+"icon": "reveal"
+},
+{
+"key": "un-member",
+"label": "New UN member",
+"hint": "The General Assembly admits a new country, and a new flag goes up outside",
+"rarity": 4,
+"icon": "structure"
+},
+{
+"key": "abdication",
+"label": "A monarch abdicates",
+"hint": "A reigning king or queen steps down",
+"rarity": 4,
+"icon": "person"
+},
+{
+"key": "space-rescue",
+"label": "Tycoon rescued",
+"hint": "A billionaire needs rescuing from space or the bottom of the sea",
+"rarity": 4,
+"icon": "vehicle"
+},
+{
+"key": "tech-breakup",
+"label": "Big Tech broken up",
+"hint": "A court orders a big tech company broken up",
+"rarity": 4,
+"icon": "sign"
+},
+{
+"key": "celeb-wins",
+"label": "Celeb elected",
+"hint": "A celebrity with no political office before is elected head of state. Any country",
+"rarity": 4,
+"icon": "person"
+},
+{
+"key": "state-secedes",
+"label": "Secession vote",
+"hint": "A US legislature or ballot votes to leave the union. It does not have to work",
+"rarity": 4,
+"icon": "structure"
+},
+{
+"key": "country-renamed",
+"label": "Country renamed",
+"hint": "A country changes its official name, recognized at the UN",
+"rarity": 4,
+"icon": "sign"
+}
+]
+}

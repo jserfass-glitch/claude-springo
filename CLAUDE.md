@@ -68,6 +68,13 @@ forced on, no photo mode, no reference photo, and a tap marks while a hold opens
 the detail. The reasoning is in `docs/09-screen-mode.md`; the short version is
 that a trope fires once for the whole room, so identical boards would have
 everyone marking the same square at the same second.
+A news pack (`kind: "news"`, the 2026 pack) plays exactly like a screen pack,
+since a headline also reaches everyone at once; `isScreen()` covers both, and
+only the setup note differs.
+
+**Board labels must fit two lines in a 360px-wide phone**, about nine
+characters a line, with no word longer than that. Longer labels get cut off
+with an ellipsis. Put the detail in the hint, which the sheet shows in full.
 
 **Never derive one player's layout from another's by rotating or mirroring.**
 The 16 win conditions are invariant under the symmetries of the square, so a

@@ -35,11 +35,13 @@ const ACCENTS = {
               dark: { fill: '#E08A85', ink: '#1F1C17', deep: '#E8A19D', soft: '#F2C8C6' } },
 };
 const ACCENT_KEYS = Object.keys(ACCENTS);
-const PACK_IDS = ['ozark-fall', 'ozark-spring', 'road-trip', 'cozy-mystery'];
+const PACK_IDS = ['ozark-fall', 'ozark-spring', 'road-trip', 'cozy-mystery', 'twenty-six'];
 
 /** A screen pack plays against a TV, a film or a live event instead of the
  *  outdoors, and nearly every default flips. See docs/09-screen-mode.md. */
-const isScreen = p => p?.kind === 'screen';
+// news plays like a screen: nothing to photograph, and a headline reaches everyone at once
+const isScreen = p => p?.kind === 'screen' || p?.kind === 'news';
+function setScreenTitle(t) { const h = $('#screenTitle'); h.textContent = t; h.hidden = !t; }
 
 const S = {
   me: null, games: [], marks: [], packs: {}, photos: new Map(),
@@ -108,10 +110,11 @@ function setView(v) {
     t.setAttribute('aria-selected', on ? 'true' : 'false');
   });
   $('#chips').style.display = v === 'board' ? '' : 'none';
-  const titles = { board: game() ? pack(game())?.title || 'Springo' : 'Springo',
-                   new: 'Springo', setup: 'New game', invite: 'Invite',
+  // the brand line above already says Springo, so a screen with no title of its own shows none
+  const titles = { board: game() ? pack(game())?.title || '' : '',
+                   new: '', setup: 'New game', invite: 'Invite',
                    review: 'Review the list', life: 'Life List', you: 'You' };
-  $('#screenTitle').textContent = titles[v] || 'Springo';
+  setScreenTitle(titles[v] || '');
   if (v === 'life') renderLife();
   if (v === 'you') renderYou();
   if (v === 'new') renderPackList();
@@ -694,6 +697,15 @@ function renderSetupNote() {
   const p = S.packs[S.setup.packId]; if (!p) return;
   const real = p.items.filter(i => i.key).length;
   const withPhoto = p.items.filter(i => i.photo).length;
+  if (p.kind === 'news') {
+    $('#setupNote').textContent =
+      `${real} items. ${p.note || ''}\n` +
+      'Tap a square when it makes the news. Hold one to read what counts.\n' +
+      (S.setup.varied
+        ? `Varied boards: everyone gets their own 24 from these ${real}.`
+        : 'Same items: a headline lands for everyone at once, so the winner is whoever taps first.');
+    return;
+  }
   if (isScreen(p)) {
     const mins = p.runtime || 45;
     $('#setupNote').textContent =
@@ -1118,7 +1130,7 @@ function renderAll() {
   const g = game();
   if (g) applyAccent(g.accent);
   renderChips();
-  if (g) { renderScore(); renderBoard(); $('#screenTitle').textContent = pack(g)?.title || 'Springo'; }
+  if (g) { renderScore(); renderBoard(); setScreenTitle(pack(g)?.title || ''); }
   if (S.view === 'board' && !g) setView('new');
 }
 

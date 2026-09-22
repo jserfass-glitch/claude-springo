@@ -71,8 +71,11 @@ button{font-family:inherit;color:inherit}
 
 /* ---------------------------------------------------------------- chrome */
 .top{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 0;min-width:0}
-.titlerow{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.titlerow h1{margin:0;font:600 24px/1.1 var(--display);letter-spacing:.06em;
+.brandrow{display:grid;grid-template-columns:36px 1fr 36px;align-items:center;gap:8px}
+/* text-indent balances the trailing letter-spacing so the word sits on centre */
+.brand{margin:0;text-align:center;font:700 30px/1 var(--display);letter-spacing:.16em;
+  text-indent:.16em;text-transform:uppercase;color:var(--acc-deep)}
+.screentitle{margin:4px 0 0;font:600 22px/1.15 var(--display);letter-spacing:.06em;
   text-transform:uppercase;min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .iconbtn{border:0;background:transparent;color:var(--ink-muted);cursor:pointer;display:grid;
