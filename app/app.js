@@ -980,7 +980,8 @@ async function generateList() {
   if (theme.length < 3) { toast('Give it a few more words.'); return; }
   const note = $('#genNote'), btn = $('#genBtn');
   note.hidden = false;
-  note.innerHTML = '<span class="spin"></span> Building a list for "' + theme + '". This takes a few seconds.';
+  note.innerHTML = '<span class="spin"></span> ';
+  note.append(`Building a list for "${theme}". This can take up to a minute.`);
   btn.disabled = true;
   try {
     let data = null;
@@ -1006,7 +1007,9 @@ async function generateList() {
     } else if (res.status === 429) {
       throw new Error((await res.json()).error || 'Too many new themes today.');
     } else {
-      throw new Error('Generation failed. The ready-made packs still work.');
+      // Netlify's own crash page is HTML, so only a JSON body carries a message
+      const msg = (await res.json().catch(() => null))?.error;
+      throw new Error(msg && res.status === 504 ? msg : 'Generation failed. The ready-made packs still work.');
     }
     if (!data.usable) throw new Error(data.reason || 'That theme will not make a findable board.');
     if (!data.items?.length) throw new Error('Nothing usable came back.');

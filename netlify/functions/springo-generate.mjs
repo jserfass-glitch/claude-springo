@@ -16,6 +16,9 @@ const ok = b => new Response(JSON.stringify(b), { status: 200, headers: HEADERS 
 const bad = (s, m) => new Response(JSON.stringify({ error: m }), { status: s, headers: HEADERS });
 
 const DAILY_LIMIT = 12;        // generation is the one cost that scales with abuse
+// Netlify kills a synchronous function at 60s and the limit cannot be raised.
+// Stop the Claude call first so the player gets a real message, not a bare 502.
+const CLAUDE_TIMEOUT_MS = 50_000;
 
 const Item = z.object({
   label: z.string().describe('Short name a player reads on a square, 1 to 4 words'),
@@ -75,21 +78,23 @@ export default async (req) => {
       max_tokens: 8000,
       system: SYSTEM,
       thinking: { type: 'adaptive' },
-      // medium rather than the default: the task is list generation, and this
-      // call sits in front of a person waiting on the Create screen. Drop to
-      // "low" if your function timeout is tight.
-      output_config: { effort: 'medium', format: zodOutputFormat(Result) },
+      // low: a 36-item list at medium effort can outrun the 60s function limit,
+      // and the creator review screen catches what a quick pass gets wrong
+      output_config: { effort: 'low', format: zodOutputFormat(Result) },
       messages: [{
         role: 'user',
         content: userMessage({ theme: body.theme, region: body.region, season: body.season }),
       }],
-    });
+    }, { timeout: CLAUDE_TIMEOUT_MS, maxRetries: 0 });
     if (res.stop_reason === 'refusal') {
       return ok({ usable: false, reason: 'That theme was declined.', items: [] });
     }
     parsed = res.parsed_output;
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return bad(429, 'busy, try again in a minute');
+    if (e instanceof Anthropic.APIConnectionTimeoutError) {
+      return bad(504, 'That list took too long to write. Try again, or pick a ready-made pack.');
+    }
     console.error('generate failed', e);
     return bad(502, 'generation failed');
   }
