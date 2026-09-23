@@ -260,8 +260,10 @@ input[type=text].code{text-transform:uppercase;letter-spacing:.24em;font-family:
   border:2px solid var(--hairline);display:grid;place-items:center;position:relative}
 .pane .frame img{width:100%;height:100%;object-fit:cover;display:block}
 .pane .frame .empty{font-size:10.5px;color:var(--ink-muted);text-align:center;padding:0 8px;line-height:1.4}
-/* an item with no reference photo should not reserve a photo-sized hole */
-.pane .frame.none{aspect-ratio:auto;min-height:0;padding:15px 12px}
+/* no reference photo: the pane goes rather than showing an empty box */
+.pair.noref{grid-template-columns:1fr}
+.pair.noref .pane.ref{display:none}
+.pair.noref .frame{aspect-ratio:4/3}
 .credit{font:500 9px ui-monospace,monospace;color:var(--ink-muted);line-height:1.45;overflow-wrap:anywhere}
 .finder{position:relative;border-radius:20px;overflow:hidden;background:#111;height:210px;
   margin-bottom:12px;display:none}

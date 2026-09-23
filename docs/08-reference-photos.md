@@ -49,10 +49,28 @@ not *Claytonia virginica*. It will have the wrong petal count, the wrong leaf,
 the wrong venation, and a nine year old will learn it. This is the one place in
 the app where generated content is actively harmful rather than merely weak.
 
-**Nothing automated for items that are not species.** A road trip pack's
-"water tower" or "fireworks stand" has no taxon and a stock photo of one
-teaches nothing. Leave those with no reference image and let the pack author
-attach one if they want. The sheet already handles the empty case.
+**Wikimedia Commons for everything that is not a species.** This document
+first said to leave a "water tower" or "fireworks stand" with no photo, on the
+theory that a picture of one teaches nothing. Playing it showed otherwise: an
+empty box on most squares of a pack reads as broken, and a child who has never
+seen a barn quilt or a crop duster does learn from a picture of one. So:
+
+- Built-in packs ship photos picked by eye from Commons, fetched by
+  `tools/fetch-commons-references.py`, which reads each file's licence from its
+  Commons page and refuses anything outside the list below. The Action API rate
+  limits shared cloud addresses to nothing, so the tool reads file pages and
+  builds thumbnail URLs itself.
+- Generated lists look photos up in the browser (`app/refphoto.js`): iNaturalist
+  for a species, then the lead photo of the square's Wikipedia article, then the
+  first Commons search hit. An article reached through a redirect to a section
+  is skipped, because "Barn quilt" redirects into "Quilt" and its photo is a
+  woman sewing. The creator review screen shows every photo before a game
+  exists.
+- A square with no photo has no reference pane at all. In honor mode that
+  leaves the name and the hint, which is the whole sheet on a screen pack too.
+
+Never Google Images or any other search engine: those photos belong to whoever
+posted them and nothing licenses the app to show them.
 
 ## Licensing, which is a real constraint
 
@@ -61,7 +79,9 @@ forbids commercial use. If Springo ever charges for anything, NC images are a
 problem, and retrofitting a licence filter after a pack library exists is
 miserable.
 
-Filter at fetch time to `cc0`, `cc-by`, `cc-by-sa` only. Never `null`, which
+Filter at fetch time to `cc0`, `cc-by`, `cc-by-sa` only, plus public domain
+on Commons. Commons also hosts the Free Art License and GFDL-only files; both
+are refused to keep one rule for both sources. Never `null`, which
 means all rights reserved. Store the observer name and licence code alongside
 the image and render them under it, because BY and BY-SA both require
 attribution and the credit line costs one line of UI.

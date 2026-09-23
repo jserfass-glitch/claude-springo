@@ -5,92 +5,225 @@
 "region": null,
 "season": "any",
 "accent": "bluebell",
-"photoDir": null,
-"credits": {},
+"photoDir": "packs/road-trip/",
+"credits": {
+"water-tower": [
+"DrStew82",
+"CC BY-SA 4.0",
+"Wikimedia Commons"
+],
+"hay-bale": [
+"Montanabw",
+"CC BY-SA 3.0",
+"Wikimedia Commons"
+],
+"grain-silo": [
+"Wikideas1",
+"CC0",
+"Wikimedia Commons"
+],
+"hawk-on-a-wire": [
+"Becky Matsubara",
+"CC BY 2.0",
+"Wikimedia Commons"
+],
+"barn-quilt": [
+"Lolwhynot3498",
+"CC BY-SA 4.0",
+"Wikimedia Commons"
+],
+"armadillo": [
+"Rhododendrites",
+"CC BY-SA 4.0",
+"Wikimedia Commons"
+],
+"church-steeple": [
+"Gary Halvorson, Oregon State Archives",
+"CC BY 4.0",
+"Wikimedia Commons"
+],
+"cattle-in-shade": [
+"pam fray",
+"CC BY-SA 2.0",
+"Wikimedia Commons"
+],
+"fireworks-stand": [
+"TaurusEmerald",
+"CC BY-SA 4.0",
+"Wikimedia Commons"
+],
+"vanity-plate": [
+"Dwight Burdette",
+"CC BY 3.0",
+"Wikimedia Commons"
+],
+"tractor-crossing": [
+"Mulad",
+"CC BY 2.0",
+"Wikimedia Commons"
+],
+"kudzu": [
+"Scott Ehardt",
+"Public domain",
+"Wikimedia Commons"
+],
+"rusted-pickup": [
+"inkknife_2000",
+"CC BY-SA 2.0",
+"Wikimedia Commons"
+],
+"gazebo": [
+"Brandonrush",
+"CC0",
+"Wikimedia Commons"
+],
+"dairy-queen": [
+"Chris Woodrich",
+"CC BY-SA 4.0",
+"Wikimedia Commons"
+],
+"river-bridge": [
+"Xnatedawgx",
+"CC BY-SA 4.0",
+"Wikimedia Commons"
+],
+"turkey-vulture": [
+"Charles J. Sharp",
+"CC BY-SA 4.0",
+"Wikimedia Commons"
+],
+"antique-mall": [
+"Mike Steele",
+"CC BY 2.0",
+"Wikimedia Commons"
+],
+"grain-elevator": [
+"Wesley Fryer",
+"CC BY-SA 2.0",
+"Wikimedia Commons"
+],
+"now-hiring": [
+"DiscoA340",
+"CC0",
+"Wikimedia Commons"
+],
+"ditch-wildflowers": [
+"Philip Halling",
+"CC BY-SA 2.0",
+"Wikimedia Commons"
+],
+"deer-crossing": [
+"Federal Highway Administration",
+"Public domain",
+"Wikimedia Commons"
+],
+"combine": [
+"Wikideas1",
+"CC0",
+"Wikimedia Commons"
+],
+"crop-duster": [
+"Charles O'Rear",
+"Public domain",
+"Wikimedia Commons"
+]
+},
 "items": [
 {
 "key": "water-tower",
 "label": "Water tower",
 "hint": "Town name on the tank",
 "rarity": 1,
-"icon": "structure"
+"icon": "structure",
+"photo": "water-tower.jpg"
 },
 {
 "key": "hay-bale",
 "label": "Hay bale",
 "hint": "Round or square, both count",
 "rarity": 1,
-"icon": "stone"
+"icon": "stone",
+"photo": "hay-bale.jpg"
 },
 {
 "key": "grain-silo",
 "label": "Grain silo",
 "hint": "",
 "rarity": 1,
-"icon": "structure"
+"icon": "structure",
+"photo": "grain-silo.jpg"
 },
 {
 "key": "hawk-on-a-wire",
 "label": "Hawk on a wire",
 "hint": "Red-tailed, usually",
 "rarity": 2,
-"icon": "bird"
+"icon": "bird",
+"photo": "hawk-on-a-wire.jpg"
 },
 {
 "key": "barn-quilt",
 "label": "Barn quilt",
 "hint": "Painted square on a barn face",
 "rarity": 3,
-"icon": "sign"
+"icon": "sign",
+"photo": "barn-quilt.jpg"
 },
 {
 "key": "armadillo",
 "label": "Armadillo",
 "hint": "Alive counts double",
 "rarity": 2,
-"icon": "creature"
+"icon": "creature",
+"photo": "armadillo.jpg"
 },
 {
 "key": "church-steeple",
 "label": "Church steeple",
 "hint": "",
 "rarity": 1,
-"icon": "structure"
+"icon": "structure",
+"photo": "church-steeple.jpg"
 },
 {
 "key": "cattle-in-shade",
 "label": "Cattle in shade",
 "hint": "",
 "rarity": 1,
-"icon": "creature"
+"icon": "creature",
+"photo": "cattle-in-shade.jpg"
 },
 {
 "key": "fireworks-stand",
 "label": "Fireworks stand",
 "hint": "",
 "rarity": 3,
-"icon": "structure"
+"icon": "structure",
+"photo": "fireworks-stand.jpg"
 },
 {
 "key": "vanity-plate",
 "label": "Vanity plate",
 "hint": "Has to be readable",
 "rarity": 2,
-"icon": "sign"
+"icon": "sign",
+"photo": "vanity-plate.jpg"
 },
 {
 "key": "tractor-crossing",
 "label": "Tractor on the road",
 "hint": "",
 "rarity": 2,
-"icon": "vehicle"
+"icon": "vehicle",
+"photo": "tractor-crossing.jpg"
 },
 {
 "key": "kudzu",
 "label": "Kudzu",
 "hint": "Swallowing something it should not",
 "rarity": 2,
-"icon": "leaf"
+"icon": "leaf",
+"photo": "kudzu.jpg"
 },
 {
 "key": null,
@@ -104,84 +237,96 @@
 "label": "Rusted pickup",
 "hint": "Parked, not driven, for some years",
 "rarity": 1,
-"icon": "vehicle"
+"icon": "vehicle",
+"photo": "rusted-pickup.jpg"
 },
 {
 "key": "gazebo",
 "label": "Town square gazebo",
 "hint": "",
 "rarity": 3,
-"icon": "structure"
+"icon": "structure",
+"photo": "gazebo.jpg"
 },
 {
 "key": "dairy-queen",
 "label": "Dairy Queen",
 "hint": "",
 "rarity": 2,
-"icon": "structure"
+"icon": "structure",
+"photo": "dairy-queen.jpg"
 },
 {
 "key": "crop-duster",
 "label": "Crop duster",
 "hint": "Flying, not parked",
 "rarity": 4,
-"icon": "vehicle"
+"icon": "vehicle",
+"photo": "crop-duster.jpg"
 },
 {
 "key": "river-bridge",
 "label": "River bridge",
 "hint": "",
 "rarity": 1,
-"icon": "water"
+"icon": "water",
+"photo": "river-bridge.jpg"
 },
 {
 "key": "turkey-vulture",
 "label": "Turkey vulture",
 "hint": "Wings in a shallow V, rocking",
 "rarity": 1,
-"icon": "bird"
+"icon": "bird",
+"photo": "turkey-vulture.jpg"
 },
 {
 "key": "antique-mall",
 "label": "Antique mall",
 "hint": "",
 "rarity": 2,
-"icon": "structure"
+"icon": "structure",
+"photo": "antique-mall.jpg"
 },
 {
 "key": "grain-elevator",
 "label": "Grain elevator",
 "hint": "",
 "rarity": 2,
-"icon": "structure"
+"icon": "structure",
+"photo": "grain-elevator.jpg"
 },
 {
 "key": "now-hiring",
 "label": "Now Hiring sign",
 "hint": "",
 "rarity": 1,
-"icon": "sign"
+"icon": "sign",
+"photo": "now-hiring.jpg"
 },
 {
 "key": "ditch-wildflowers",
 "label": "Ditch wildflowers",
 "hint": "A real stand of them, not three stems",
 "rarity": 1,
-"icon": "bloom"
+"icon": "bloom",
+"photo": "ditch-wildflowers.jpg"
 },
 {
 "key": "deer-crossing",
 "label": "Deer crossing sign",
 "hint": "",
 "rarity": 1,
-"icon": "sign"
+"icon": "sign",
+"photo": "deer-crossing.jpg"
 },
 {
 "key": "combine",
 "label": "Combine harvester",
 "hint": "In a field, working",
 "rarity": 3,
-"icon": "vehicle"
+"icon": "vehicle",
+"photo": "combine.jpg"
 }
 ]
 }

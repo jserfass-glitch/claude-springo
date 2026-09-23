@@ -4,7 +4,7 @@
 const VERSION = 'springo-v8';
 const SHELL = [
   './', './index.html', './app.css', './app.js', './game.js', './store.js', './sync.js',
-  './icons.js', './prompt.js',
+  './icons.js', './prompt.js', './refphoto.js',
   './manifest.webmanifest', './icon-192.png', './icon-512.png',
   './fonts/oswald-latin.woff2', './fonts/archivo-latin.woff2',
   './packs/ozark-fall.json', './packs/ozark-spring.json', './packs/road-trip.json',
@@ -14,8 +14,9 @@ const SHELL = [
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
     const c = await caches.open(VERSION);
-    // addAll fails the whole install if one entry 404s; take them one at a time
-    await Promise.all(SHELL.map(u => c.add(u).catch(() => {})));
+    // addAll fails the whole install if one entry 404s; take them one at a time.
+    // reload skips the HTTP cache, which holds pack files for a week
+    await Promise.all(SHELL.map(u => c.add(new Request(u, { cache: 'reload' })).catch(() => {})));
     self.skipWaiting();
   })());
 });
@@ -40,11 +41,12 @@ self.addEventListener('message', e => {
     for (const u of d.urls.slice(0, 200)) {
       try {
         if (await c.match(u)) { already++; continue; }
+        // fetch throws when a host sends no CORS; its opaque copy still caches
+        // and renders. An error status must never be cached: an opaque 429
+        // looks like a photo and would stay broken until the cache is cleared
         let r = await fetch(u).catch(() => null);
-        // generated packs point at iNaturalist, which may not send CORS on the
-        // image host; an opaque response still caches and still renders
-        if (!r || !r.ok) r = await fetch(u, { mode: 'no-cors' }).catch(() => null);
-        if (!r) continue;
+        if (!r) r = await fetch(u, { mode: 'no-cors' }).catch(() => null);
+        if (!r || !(r.ok || r.type === 'opaque')) continue;
         await c.put(u, r);
         stored++;
       } catch { /* one missing photo is not worth failing the batch */ }
@@ -76,7 +78,40 @@ self.addEventListener('fetch', e => {
   }
   if (url.pathname.startsWith('/api/')) return;
 
-  // reference photos and packs: cache first, they are immutable by filename
+  // a generated pack's reference photos live on iNaturalist or Wikimedia. The
+  // warm step already stored them; serve that copy, or the sheet goes blank
+  // the first time a player opens a square with no signal
+  if (request.destination === 'image' && url.origin !== location.origin) {
+    e.respondWith((async () => {
+      const hit = await caches.match(request.url);
+      if (hit) return hit;
+      try {
+        const res = await fetch(request.url, { mode: 'cors' });
+        if (res.ok) (await caches.open(VERSION)).put(request.url, res.clone());
+        return res;
+      } catch {
+        return fetch(request).catch(() => new Response('', { status: 504 }));
+      }
+    })());
+    return;
+  }
+
+  // a pack's list changes with a deploy: answer from cache so boot never waits,
+  // and refresh the copy behind it so the next launch has the new one
+  if (url.pathname.includes('/packs/') && url.pathname.endsWith('.json')) {
+    e.respondWith((async () => {
+      const hit = await caches.match(request);
+      const fresh = fetch(request, { cache: 'no-cache' }).then(async res => {
+        if (res.ok) await (await caches.open(VERSION)).put(request, res.clone());
+        return res;
+      }).catch(() => null);
+      if (hit) { e.waitUntil(fresh); return hit; }
+      return (await fresh) || new Response('', { status: 504 });
+    })());
+    return;
+  }
+
+  // reference photos: cache first, a photo is fixed once a pack ships it
   if (url.pathname.includes('/packs/')) {
     e.respondWith((async () => {
       const hit = await caches.match(request);

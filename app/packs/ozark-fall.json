@@ -90,6 +90,21 @@
 "woolly-bear": [
 "charlie",
 "cc-by"
+],
+"sassafras": [
+"KATHERINE WAGNER-REISS",
+"CC BY-SA 4.0",
+"Wikimedia Commons"
+],
+"black-walnut": [
+"Wikimedia Commons",
+"Public domain",
+"Wikimedia Commons"
+],
+"beaver-sign": [
+"Niranjan Arminius",
+"CC BY-SA 4.0",
+"Wikimedia Commons"
 ]
 },
 "items": [
@@ -214,7 +229,8 @@
 "hint": "Mitten, thumbless and two-thumbed leaves on one tree",
 "rarity": 2,
 "sci": "Sassafras albidum",
-"icon": "leaf"
+"icon": "leaf",
+"photo": "sassafras.jpg"
 },
 {
 "key": "persimmon",
@@ -240,7 +256,8 @@
 "hint": "Green tennis ball that stains your hands brown",
 "rarity": 1,
 "sci": "Juglans nigra",
-"icon": "fruit"
+"icon": "fruit",
+"photo": "black-walnut.jpg"
 },
 {
 "key": "hickory-nut",
@@ -310,7 +327,8 @@
 "label": "Beaver sign",
 "hint": "A gnawed stump or a fresh cut sapling by water",
 "rarity": 4,
-"icon": "tree"
+"icon": "tree",
+"photo": "beaver-sign.jpg"
 }
 ]
 }

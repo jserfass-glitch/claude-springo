@@ -7,6 +7,7 @@ import { meta, games, marks, photos, packs, outbox, uid, me, setName } from './s
 import * as sync from './sync.js';
 import { SYSTEM, JSON_SHAPE, userMessage } from './prompt.js';
 import { injectSprite, icon, ICON_NAMES } from './icons.js';
+import { findRefPhoto } from './refphoto.js';
 
 const $ = s => document.querySelector(s);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -42,6 +43,10 @@ const PACK_IDS = ['ozark-fall', 'ozark-spring', 'road-trip', 'cozy-mystery', 'tw
 // news plays like a screen: nothing to photograph, and a headline reaches everyone at once
 const isScreen = p => p?.kind === 'screen' || p?.kind === 'news';
 function setScreenTitle(t) { const h = $('#screenTitle'); h.textContent = t; h.hidden = !t; }
+// photoDir is '' on a generated pack, whose items carry absolute URLs, and
+// null on a pack with no photos at all, so test for null, not truthiness
+const refSrc = (p, it) => (it?.photo && p && p.photoDir != null ? p.photoDir + it.photo : null);
+const cssUrl = u => `url(${JSON.stringify(u)})`;
 
 const S = {
   me: null, games: [], marks: [], packs: {}, photos: new Map(),
@@ -62,10 +67,29 @@ function toast(msg, ms = 2600) {
 const kb = n => n >= 1048576 ? (n / 1048576).toFixed(2) + ' MB' : Math.round(n / 1024) + ' KB';
 
 /* ------------------------------------------------------------------ packs */
+/** A built-in pack gains photos or rewording with a deploy. The stored copy
+ *  opens the game at once and this swaps in the new one behind it, but only
+ *  when the draw is unchanged: boards are drawn from item order and rarity, so
+ *  a different list would reshuffle every game already in progress. */
+const drawShape = p => p.items.map(i => `${i.key}:${i.rarity}`).join('|');
+async function refreshPack(id) {
+  if (!PACK_IDS.includes(id)) return;          // a generated pack lives only here
+  try {
+    const r = await fetch(`packs/${id}.json`, { cache: 'no-cache' });
+    if (!r.ok) return;
+    const p = await r.json(), old = S.packs[id];
+    if (!old || JSON.stringify(p) === JSON.stringify(old)) return;
+    if (drawShape(p) !== drawShape(old)) { console.warn('pack', id, 'changed its draw; keeping the stored copy'); return; }
+    await packs.put(p);
+    S.packs[id] = p;
+    if (S.games.some(g => g.packId === id)) warmPackPhotos(p);
+  } catch { /* offline: the stored copy is the pack */ }
+}
+
 async function loadPack(id) {
   if (S.packs[id]) return S.packs[id];
   const cached = await packs.get(id);
-  if (cached) { S.packs[id] = cached; return cached; }
+  if (cached) { S.packs[id] = cached; refreshPack(id); return cached; }
   const p = await (await fetch(`packs/${id}.json`)).json();
   await packs.put(p);            // cached so a game opens with no network, ever
   S.packs[id] = p;
@@ -618,25 +642,24 @@ function openSheet(idx) {
   $('#shHint').textContent = it.hint || 'No identification hint on this pack item.';
 
   const rf = $('#refFrame'), rc = $('#refCredit'); rf.textContent = ''; rc.textContent = '';
-  rf.classList.toggle('none', !(it.photo && p.photoDir));
-  if (screenPack) { /* no panes */ }
-  else if (it.photo && p.photoDir) {
-    const im = new Image(); im.src = p.photoDir + it.photo; im.alt = 'Reference photo of ' + it.label;
-    im.onerror = () => {
-      rf.classList.add('none');
-      rf.innerHTML = '<span class="empty">Reference photo not downloaded yet</span>';
-    };
+  const pair = $('#sheetPair');
+  const src = screenPack ? null : refSrc(p, it);
+  const solo = !screenPack && g.mode !== 'photo';
+  // no reference photo means no reference pane, never an empty box; in honor
+  // mode that leaves nothing to show, so the whole pair goes
+  const noRef = () => { pair.classList.add('noref'); rc.textContent = ''; if (solo) pair.hidden = true; };
+  pair.classList.remove('noref');
+  pair.classList.toggle('solo', solo);
+  pair.hidden = screenPack;
+  if (src) {
+    const im = new Image(); im.alt = 'Reference photo of ' + it.label;
+    im.onerror = noRef;          // offline and never downloaded
+    im.src = src;
     rf.append(im);
     const cr = p.credits?.[it.key];
-    if (cr) rc.textContent = `iNaturalist · ${cr[0]} · ${String(cr[1]).toUpperCase()}`;
-  } else {
-    rf.innerHTML = '<span class="empty">No open-licence photo. Not every item is a species.</span>';
-  }
-
-  // a screen pack has neither a reference photo nor one of your own; the
-  // "what counts" line is the whole content
-  $('#sheetPair').hidden = screenPack;
-  $('#sheetPair').classList.toggle('solo', !screenPack && g.mode !== 'photo');
+    if (cr) rc.textContent = cr[2] ? `${cr[2]} · ${cr[0]} · ${cr[1]}`
+                                   : `iNaturalist · ${cr[0]} · ${String(cr[1]).toUpperCase()}`;
+  } else if (!screenPack) noRef();
 
   const mf = $('#myFrame'), mc = $('#myCredit'); mf.textContent = ''; mc.textContent = '';
   $('#myCap').textContent = theirs ? (g.players.find(x => x.id === viewing)?.name || 'Their') + "'s photo" : 'Your photo';
@@ -839,8 +862,8 @@ function renderLife() {
     const w = document.createElement('div'); w.className = 'lifeitem';
     const im = document.createElement('div'); im.className = 'im';
     const mine = S.photos.get(`${e.gameId}:${S.me.id}:${e.idx}`);
-    if (mine) im.style.backgroundImage = `url(${mine.thumbUrl})`;
-    else if (e.item.photo && e.pack.photoDir) im.style.backgroundImage = `url(${e.pack.photoDir}${e.item.photo})`;
+    if (mine) im.style.backgroundImage = cssUrl(mine.thumbUrl);
+    else if (refSrc(e.pack, e.item)) im.style.backgroundImage = cssUrl(refSrc(e.pack, e.item));
     else im.append(icon(e.item.icon, { key: e.item.key }));
     const tx = document.createElement('div'); tx.className = 'tx';
     const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = e.item.label;
@@ -898,48 +921,21 @@ function renderYou() {
   $('#aboutNote').textContent =
     `Springo, prototype build.\n` +
     `Sync: ${sync.cloudState() === true ? 'on' : sync.cloudState() === false ? 'not deployed, local only' : 'checking'}\n` +
-    `Reference photos: iNaturalist, cc0 / cc-by / cc-by-sa, attributed per square.\n` +
+    `Reference photos: iNaturalist and Wikimedia Commons, open licences only, credited per square.\n` +
     `Boards and full-size photos stay on this device. In a shared game your marks\n` +
     `and a thumbnail of each photo go to the server so other players can see them.`;
 }
 
 /* ------------------------------------------------- generate + review list */
-const OPEN_LICENCES = new Set(['cc0', 'cc-by', 'cc-by-sa']);
-
-/** iNaturalist, straight from the browser. Research grade and open licences
- *  only, because a CC BY-NC photo breaks the moment this app charges for
- *  anything. See docs/08-reference-photos.md. */
-async function resolvePhoto(sci) {
-  const base = 'https://api.inaturalist.org/v1/observations'
-    + '?photo_license=cc0%2Ccc-by%2Ccc-by-sa&quality_grade=research&order_by=votes&per_page=6'
-    + '&taxon_name=' + encodeURIComponent(sci);
-  for (const extra of ['&term_id=12&term_value_id=13', '']) {   // flowering first
-    try {
-      const r = await fetch(base + extra);
-      if (!r.ok) continue;
-      const j = await r.json();
-      for (const o of j.results || []) {
-        for (const ph of o.photos || []) {
-          if (OPEN_LICENCES.has(String(ph.license_code || '').toLowerCase())) {
-            return { url: String(ph.url || '').replace('square', 'medium'),
-                     by: o.user?.login || 'iNaturalist', lic: ph.license_code };
-          }
-        }
-      }
-    } catch { /* offline or blocked: the empty state is honest */ }
-  }
-  return null;
-}
-
 /** Resolve a few at a time so the review screen fills in rather than stalling. */
 async function resolvePhotos(items, onEach) {
-  const queue = items.filter(i => i.sci && !i.photoTried);
+  const queue = items.filter(i => !i.photoTried);
   const workers = Array.from({ length: 4 }, async () => {
     while (queue.length) {
       const it = queue.shift();
       it.photoTried = true;
-      const got = await resolvePhoto(it.sci);
-      if (got) { it.photo = got.url; it.credit = [got.by, got.lic]; }
+      const got = await findRefPhoto(it);
+      if (got) { it.photo = got.url; it.credit = got.credit; }
       onEach(it);
     }
   });
@@ -1054,7 +1050,7 @@ function renderReview() {
     b.setAttribute('aria-pressed', it.keep ? 'true' : 'false');
     b.setAttribute('aria-label', `${it.label}, ${it.keep ? 'kept' : 'dropped'}`);
     const im = document.createElement('span'); im.className = 'im';
-    if (it.photo) im.style.backgroundImage = `url(${it.photo})`;
+    if (it.photo) im.style.backgroundImage = cssUrl(it.photo);
     else im.append(icon(it.icon, { key: it.key }));
     if (screenPack) im.classList.add('noimg');
     const bd = document.createElement('span'); bd.className = 'bd';
@@ -1086,7 +1082,7 @@ async function packFromReview() {
     region: R.region || null, season: null, accent: 'beauty',
     kind: screenPack ? 'screen' : undefined,
     runtime: screenPack ? (R.runtime || 45) : undefined,
-    // outdoor items carry absolute iNaturalist URLs; a screen board has none
+    // outdoor items carry absolute iNaturalist or Commons URLs; a screen board has none
     photoDir: screenPack ? null : '',
     credits: screenPack ? {} : credits,
     items, custom: true, theme: R.theme, createdAt: Date.now(),
@@ -1099,9 +1095,9 @@ async function packFromReview() {
 /** Ask the service worker to download a pack's reference photos now, so they
  *  are there when there is no signal. Best effort and silent on failure. */
 async function warmPackPhotos(p) {
-  if (!p || !p.photoDir || !('serviceWorker' in navigator)) return;
-  const urls = p.items.filter(i => i.photo)
-    .map(i => new URL(p.photoDir + i.photo, location.href).href);
+  if (!p || !('serviceWorker' in navigator)) return;
+  const urls = p.items.map(i => refSrc(p, i)).filter(Boolean)
+    .map(u => new URL(u, location.href).href);
   if (!urls.length) return;
   try {
     const reg = await Promise.race([
@@ -1163,6 +1159,8 @@ async function boot() {
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
+    // a cache can be cleared under a game; top it back up while there is signal
+    for (const id of new Set(S.games.map(g => g.packId))) warmPackPhotos(S.packs[id]);
   }
 }
 

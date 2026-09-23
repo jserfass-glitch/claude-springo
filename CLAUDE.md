@@ -13,7 +13,7 @@ behaviour, because most of what looks arbitrary here was a decision.
   but still the clearest explanation of the motion and colour decisions.
 - `netlify/functions/` sync and theme generation. The only things with
   dependencies.
-- `tools/` the difficulty simulation and the reference-photo fetcher.
+- `tools/` the difficulty simulation and the reference-photo fetchers.
 
 ## Rules that are easy to break by accident
 
@@ -45,9 +45,19 @@ does not flash the other one before the module loads. Auto means no
 `data-theme` attribute at all, so `prefers-color-scheme` decides. Changing it
 must re-run `applyAccent`, or the shell and the accent disagree.
 
-**Reference photos must be licence-filtered** to `cc0`, `cc-by`, `cc-by-sa`.
-Much of iNaturalist is CC BY-NC, which breaks the moment this charges for
-anything. Always show the observer and the licence.
+**Reference photos must be licence-filtered** to `cc0`, `cc-by`, `cc-by-sa`
+(and public domain on Commons). Much of iNaturalist is CC BY-NC, which breaks
+the moment this charges for anything. Always show the author and the licence.
+Species come from iNaturalist, everything else from Wikimedia Commons, never a
+search engine. A square with no photo shows no reference pane, never an empty
+box. Test a pack's photo presence with `p.photoDir != null`: a generated pack's
+`photoDir` is `''`, which is falsy.
+
+**A shipped pack's item order and rarity are frozen.** Phones keep each pack
+in IndexedDB and `refreshPack` swaps in a deployed edit only when the
+key-and-rarity sequence is unchanged, because boards are drawn from it and a
+different sequence would reshuffle games in progress. Labels, hints and photos
+can change freely. To change the items themselves, ship a new pack id.
 
 **The creator review screen is not optional.** Generation alone fails on wrong
 facts, impossible difficulty and abusive input at once. See `docs/08`.
